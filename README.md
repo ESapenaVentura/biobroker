@@ -107,8 +107,8 @@ Regarding new entities:
 To generate documentation:
 
 1. Go to the root of the repository: `cd biobroker`
-2. Run the following sphinx command: `sphinx-apidoc -Mf -o docs broker`. This will regenerate the rst files with module
-   content first! Just as I like it.
+2. Run the following sphinx command: `sphinx-apidoc -Mf -o docs biobroker`. This will regenerate the rst files with 
+   module content first! Just as I like it.
 3. `cd docs`
 4. `make clean html`
 
