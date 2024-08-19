@@ -8,12 +8,12 @@ import progressbar
 
 # Need this to not hit a circular import issue with type hints
 if TYPE_CHECKING:
-    from broker.api import GenericApi
-    from broker.authenticator import GenericAuthenticator
-    from broker.input_processor import GenericInputProcessor
-    from broker.output_processor.generic_output_processor import GenericOutputProcessor
-    from broker.metadata_entity.generic_entity import GenericEntity
-    from broker.wrangler.wrangler import Wrangler
+    from biobroker.api import GenericApi
+    from biobroker.authenticator import GenericAuthenticator
+    from biobroker.input_processor import GenericInputProcessor
+    from biobroker.output_processor import GenericOutputProcessor
+    from biobroker.metadata_entity import GenericEntity
+    from biobroker.wrangler.wrangler import Wrangler
 
 
 progressbar.streams.wrap_stderr()  # This is needed for progressbar to work around loggers.
