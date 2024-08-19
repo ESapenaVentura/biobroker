@@ -26,7 +26,7 @@ def add_to_path():
     for current, dirs, c in os.walk(str(workspace_path)):
         for dir in dirs:
 
-            project_path = os.path.join(workspace_path, dir, 'broker')
+            project_path = os.path.join(workspace_path, dir, 'biobroker')
 
             if os.path.exists(project_path):
                 projects.append(project_path)
@@ -39,7 +39,7 @@ add_to_path()
 
 # -- Project information -----------------------------------------------------
 
-project = 'Wrangler'
+project = 'Biobroker'
 copyright = '2024, Enrique Sapena Ventura'
 author = 'Enrique Sapena Ventura'
 
