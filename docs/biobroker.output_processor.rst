@@ -9,8 +9,6 @@ biobroker.output\_processor package
 Submodules
 ----------
 
-biobroker.output\_processor.output\_processor module
-----------------------------------------------------
 
 .. automodule:: biobroker.output_processor.output_processor
    :members:

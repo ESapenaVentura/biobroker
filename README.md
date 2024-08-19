@@ -32,7 +32,7 @@ Each subclass of the `GenericAuthenticator` defines:
 - What is the base_uri of the authentication service
 - What is the auth endpoint called to retrieve the token
 - What is the process to retrieve the token (Sometimes, like in the `WebinApi`, requests need to have a
-  specific body)
+specific body)
 
 And so on with all the modules.
 
@@ -42,7 +42,8 @@ is a module that loads all of them, but should be generic enough that only one n
 
 A graphical representation of the overall infrastructure can be seen below:
 
-```mermaid
+```{mermaid}
+
 graph LR;
 
 input_metadata>Input metadata]
@@ -87,8 +88,10 @@ Could include:
 
 ## Notes for developers.
 Regarding documentation:
+
 - When adding <span style="color:red">development notes</span> that are specific to a submodule, please add them under "README.md" within the
   submodule folder.
+
 - When adding <span style="color:red">user guidelines</span> or user-friendly descriptions for any of the submodules, please fill out the
   `__init__` file within the submodule folder. User-friendly documentation for the library is generated from
   this file (For top/high-level module documentation) and from the code itself (for command/function documentation)

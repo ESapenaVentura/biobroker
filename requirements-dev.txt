@@ -1,6 +1,9 @@
 sphinx==7.4.7
 sphinx-toolbox
 sphinx-rtd-theme
+sphinx-mdinclude
+sphinxcontrib-mermaid
+myst_parser
 
 pandas==2.0.3
 numpy==1.23.1

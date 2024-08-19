@@ -9,16 +9,12 @@ biobroker.wrangler package
 Submodules
 ----------
 
-biobroker.wrangler.exceptions module
-------------------------------------
 
 .. automodule:: biobroker.wrangler.exceptions
    :members:
    :undoc-members:
    :show-inheritance:
 
-biobroker.wrangler.wrangler module
-----------------------------------
 
 .. automodule:: biobroker.wrangler.wrangler
    :members:

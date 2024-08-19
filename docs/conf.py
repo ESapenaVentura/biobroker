@@ -52,13 +52,17 @@ author = 'Enrique Sapena Ventura'
 extensions = [ 'sphinx.ext.autodoc',
                'sphinx_autodoc_typehints',
                'sphinx_toolbox.decorators',
-               'sphinx.ext.napoleon'
-]
+               'sphinx.ext.napoleon',
+               'sphinxcontrib.mermaid',
+               'myst_parser'
+               ]
 napoleon_google_docstring = False
 napoleon_include_special_with_doc = True  # Document special members (like __str__) if they have documentation
 napoleon_include_private_with_doc = True  # Document private members (Cls._private_member)
 napoleon_use_param = False
 napoleon_use_ivar = True
+
+python_use_unqualified_type_names = True
 
 add_module_names = False # Prettier documents?
 autodoc_member_order = 'bysource' # I hate sorting - I decide where my methods appear >:(
@@ -69,7 +73,7 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'biobroker.rst']
 
 
 # -- Options for HTML output -------------------------------------------------
@@ -83,3 +87,8 @@ html_theme = 'sphinx_rtd_theme'
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 html_static_path = ['_static']
+
+source_suffix = {
+    '.rst': 'restructuredtext',
+    '.md': 'markdown'
+}
