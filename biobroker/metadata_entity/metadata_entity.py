@@ -161,7 +161,7 @@ class Biosample(GenericEntity):
         Return the property 'id', extracting it from the 'name' property. Defaults to an empty string.
         :return:
         """
-        return self.entity.get('name', default='')
+        return self.entity.get('name', '')
 
     @property
     def accession(self) -> str:
@@ -169,7 +169,7 @@ class Biosample(GenericEntity):
         Return the property 'accesssion', extracting it from the 'accession'. Defaults to an emtpy string
         :return:
         """
-        return self.entity.get('accession', default='')
+        return self.entity.get('accession', '')
 
     @GenericEntity.entity.setter
     def entity(self, metadata: dict):
