@@ -1,0 +1,36 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+requires-python = ">= 3.10"
+name = "biobroker"
+description = "A package to easily broker data and metadata to repositories."
+version = "1.0.2"
+authors = [
+  {name = "Enrique Sapena Ventura", email = "sapenaventura@gmail.com"},
+]
+maintainers = [
+  {name = "Enrique Sapena Ventura", email = "sapenaventura@gmail.com"},
+]
+
+readme = "README-PYPI.md"
+license = {file = "LICENSE"}
+keywords = ["brokering", "broker", "Biosamples", "Metadata"]
+classifiers = [
+	"Development Status :: 4 - Beta"
+]
+
+dependencies = [
+  "pandas~=2.0.3",
+  "numpy~=1.23.1",
+  "requests>=2.31.0",
+  "xlrd==2.0.1",
+  "progressbar2~=4.4.2",
+  "unit_parse~=0.1.11"
+]
+
+[project.urls]
+Documentation = "https://biobroker.readthedocs.io/en/latest/"
+Repository = "https://github.com/ESapenaVentura/biobroker.git"
+Issues = "https://github.com/ESapenaVentura/biobroker/issues"

@@ -15,9 +15,7 @@ genomics/bio archives hosted by EMBL-EBI. It may be that some archives can't jus
 will be very happy if this library can be extended to just work with enough archives to ensure a biology
 laboratory can set up an automatic brokering process that works for them.
 
-# Wrangler Infrastructure
-
-## Overall
+## Infrastructure summary
 
 The infrastructure, in simple terms, is a very modularized submission system. Each of the components
 should have a generic python object, that collects all the attributes and expected methods for
@@ -72,10 +70,18 @@ Examples can be found under the `examples` folder. <span style="color:red">**WIP
 Further documentation, including extended definitions and restrictions/requirements for all classes will
 be given below; for code-generated documentation, please refer to the docs.
 
+## Install
+
+```shell
+pip3 install biobroker
+```
+
 ## How to run
 
-<span style="color:red">**WIP**</span> (I still don't even have examples, also this is a bunch of objects so it's more
-like showing some example usage?)
+This library does not support CLI access at the moment (Maybe in the future I could think of a CLI; although I would
+much rather have a simple GUI). As such, you will have to install and write scripts using the objects
+
+Please see the examples folder.
 
 Could include:
 - [ ] From spreadsheet to biosamples

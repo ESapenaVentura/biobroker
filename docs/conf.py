@@ -50,12 +50,15 @@ author = 'Enrique Sapena Ventura'
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [ 'sphinx.ext.autodoc',
+               'sphinx.ext.autosummary',
                'sphinx_autodoc_typehints',
                'sphinx_toolbox.decorators',
                'sphinx.ext.napoleon',
                'sphinxcontrib.mermaid',
                'myst_parser'
                ]
+
+autosummary_generate = True
 napoleon_google_docstring = False
 napoleon_include_special_with_doc = True  # Document special members (like __str__) if they have documentation
 napoleon_include_private_with_doc = True  # Document private members (Cls._private_member)
