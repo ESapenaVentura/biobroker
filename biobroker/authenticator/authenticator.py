@@ -153,6 +153,11 @@ class WebinAuthenticator(GenericAuthenticator):
         self.token = ""
         self.logger.info(f"WebinAuthenticator set up successfully. Base uri: {self.base_uri}")
 
+    @GenericAuthenticator.auth_endpoint.setter
+    def auth_endpoint(self, endpoint: str):
+        """Authentication endpoint setter"""
+        self._auth_endpoint = os.path.join(self.base_uri, endpoint)
+
     @GenericAuthenticator.token.setter
     def token(self, _):
         """
