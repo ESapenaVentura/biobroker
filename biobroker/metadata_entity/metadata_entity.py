@@ -9,8 +9,6 @@ from biobroker.metadata_entity.exceptions import NoNameSetError, NameShouldBeStr
 from biobroker.generic.exceptions import MandatoryFunctionNotSet
 from biobroker.generic.logger import set_up_logger
 
-from unit_parse import parser
-
 
 # MONKEY PATCHING JSON ENCODER TO MAKE ENTITIES JSON SERIALIZABLE #
 def _default(obj):
@@ -274,12 +272,6 @@ class Biosample(GenericEntity):
         # characteristics
         else:
             characteristic = {}
-            if isinstance(value, str):
-                parsed_value = parser(value)
-                if parsed_value and not parsed_value.unitless:
-                    self.logger.warning(f"Sample {self.id}, key {key}: Seems like the value {value} may contain a "
-                                        f"unit. Please consider adding units to the input source.")
-
             # Managing the elements of the attributes in characteristics. Check
             # https://www.ebi.ac.uk/biosamples/docs/references/api/submit#_sample
             if self.delimiter in key:
@@ -374,7 +366,7 @@ class Biosample(GenericEntity):
                 flattened_json[relationship['type']] = []
             flattened_json[relationship['type']].append(relationship['target'])
         for relationship_type in relationship_types:
-            flattened_json[relationship_type] = "||".join(flattened_json[relationship_type])
+            flattened_json[relationship_type] = "||".join(flattened_json.get(relationship_type, []))
         return flattened_json
 
     def _flatten_characteristics(self, flattened_json: dict, characteristics: dict) -> dict:
@@ -415,12 +407,17 @@ class Biosample(GenericEntity):
 
         :return: Printable string with guidelines.
         """
-        guidelines = "A Biosamples entity MUST have the following properties set:\n" \
-                     "\t- name: a descriptive title for the sample\n" \
-                     "\t- taxId or organism: either the integer code for a taxon ID (taxId), according to " \
-                     "https://www.ncbi.nlm.nih.gov/taxonomy, or a string that validates against those records " \
-                     "(organism)\nA Biosamples entity SHOULD have the following properties set:\n" \
-                     "\t- release: date of release for the metadata of the entity. DEFAULTS TO MOMENT OF CREATION.\n" \
-                     "For more information, please see " \
-                     "https://www.ebi.ac.uk/biosamples/docs/references/api/submit#_submission_minimal_fields"
-        return guidelines
+        return BIOSAMPLES_GUIDELINES
+
+
+BIOSAMPLES_GUIDELINES = "A Biosamples entity MUST have the following properties set:\n" \
+                        "\t- name: a descriptive title for the sample\n" \
+                        "\t- taxId or organism: either the integer code for a taxon ID (taxId), according to " \
+                        "https://www.ncbi.nlm.nih.gov/taxonomy, or a string that validates against those records " \
+                        "(organism)\nA Biosamples entity SHOULD have the following properties set:\n" \
+                        "\t- release: date of release for the metadata of the entity. DEFAULTS TO MOMENT OF CREATION.\n" \
+                        "For more information, please see " \
+                        "https://www.ebi.ac.uk/biosamples/docs/references/api/submit#_submission_minimal_fields.\n\n" \
+                        "To indicate relationships in the samples, please use a field named after the relationship" \
+                        "itself: namely, 'derived_from', 'same_as', 'has_member' or 'child_of'.\nPlease see" \
+                        "https://www.ebi.ac.uk/biosamples/docs/guides/relationships"
