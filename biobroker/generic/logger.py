@@ -31,12 +31,13 @@ def set_up_logger(instance_object: GenericApi | GenericAuthenticator | GenericEn
     level = logging.INFO if verbose else logging.WARNING
     logger = logging.getLogger(instance_object.__class__.__name__)
     logger.setLevel(logging.DEBUG)
-
-    file_handler = logging.FileHandler(os.environ.get('BROKER_LOG', default='broker_log.txt'))
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-    file_handler.setFormatter(formatter)
-    file_handler.setLevel(logging.DEBUG)  # File always set to level DEBUG
-    logger.addHandler(file_handler)
+
+    if os.environ.get('BROKER_LOG'):
+        file_handler = logging.FileHandler(os.environ.get('BROKER_LOG'))
+        file_handler.setFormatter(formatter)
+        file_handler.setLevel(logging.DEBUG)  # File always set to level DEBUG
+        logger.addHandler(file_handler)
 
     stream_handler = logging.StreamHandler()
     stream_handler.setFormatter(formatter)
