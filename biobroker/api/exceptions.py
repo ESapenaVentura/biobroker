@@ -60,9 +60,24 @@ class CantBeUpdatedLocalError(Exception):
         :param logger: subclass logger to log the error message to.
         """
         reasons_str = "\n\t- ".join(reasons)
-        message = f"Sample with ID {sample_id} can't be updated - Error(s): \n\t- {reasons_str}"
-        logger.error(message)
-        super().__init__(message)
+        self.message = f"Sample with ID {sample_id} can't be updated - Error(s): \n\t- {reasons_str}"
+        logger.error(self.message)
+        super().__init__(self.message)
+
+
+class BiosamplesValidationError(Exception):
+    def __init__(self, error_list: list, logger: logging.Logger):
+        """
+        Raise a Biosamples minimal checklist validation error
+        (https://www.ebi.ac.uk/biosamples/schemas/certification/biosamples-minimal.json)
+
+        :param error_list: list of errors returned from response.
+        :param logger: subclass logger to log the error message to.
+        """
+        delimiter = "\n\t- "
+        self.message = f"Found following errors in sample validation:{delimiter}{delimiter.join(error_list)}"
+        logger.error(self.message)
+        super().__init__(self.message)
 
 
 # I know this is repeated in the update error, but BSD does not return the sample ID with the creation of the sample.
@@ -77,6 +92,6 @@ class ChecklistValidationError(Exception):
         """
         # Validation against checklist failed, returns a non-jsonable message
         validation_errors_str = parse_checklist_validation_errors(response_text)
-        message = f"Samples failed checklist validation with the following errors: \n\t- {validation_errors_str}"
-        logger.error(message)
-        super().__init__(message)
+        self.message = f"Samples failed checklist validation with the following errors: \n\t- {validation_errors_str}"
+        logger.error(self.message)
+        super().__init__(self.message)
