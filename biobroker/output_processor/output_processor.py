@@ -61,8 +61,9 @@ class XlsxOutputProcessor(GenericOutputProcessor):
 
     :param output_path: Path to the file being saved. Please include '.xlsx' extension.
     """
-    def __init__(self, output_path):
+    def __init__(self, output_path, sheet_name: str = 'Sheet1'):
         super().__init__(output_path)
+        self.sheet_name = sheet_name
 
     def _save(self, dataframe: pandas.DataFrame):
         """
@@ -70,4 +71,4 @@ class XlsxOutputProcessor(GenericOutputProcessor):
 
         :param dataframe: Dataframe containing the flattened metadata from the GenericEntity subclasses.
         """
-        dataframe.to_excel(self.path, index=False)
+        dataframe.to_excel(self.path, index=False, sheet_name=self.sheet_name, engine='xlrd')
