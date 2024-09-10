@@ -6,7 +6,8 @@ from requests.utils import requote_uri
 
 from progressbar import progressbar, AdaptiveETA, Percentage, FormatLabel, AnimatedMarker, Counter
 
-from biobroker.api.exceptions import CantBeUpdatedApiError, CantBeUpdatedLocalError, ChecklistValidationError
+from biobroker.api.exceptions import CantBeUpdatedApiError, CantBeUpdatedLocalError, ChecklistValidationError, \
+    BiosamplesValidationError
 from biobroker.metadata_entity import Biosample
 from biobroker.metadata_entity import GenericEntity
 from biobroker.authenticator import GenericAuthenticator
@@ -293,13 +294,20 @@ class BsdApi(GenericApi):
         Submission errors and how they should be handled. Biosamples returns non-jsonable responses sometimes so this
         handles the type and display of errors during submission.
 
-        # TODO: Add more errors. Currently only supports Checklist validation error.
+        Errors being raised:
+            - :exc:ChecklistValidationError : Checklist validation has failed
+            - :exc:BiosamplesValidationError: BSD minimal sample checklist error. Returned differently, because why not
+
+        # TODO: Add more errors.
 
         :param response: response obtained during submission. Usually r.status_code > 300
         :return: None if no errors are detected.
         """
         if "Checklist validation failed" in response.text:
             raise ChecklistValidationError(response.text, self.logger)
+
+        if response.status_code == 400 and "datapath" in response.text:
+            raise BiosamplesValidationError(response.json(), self.logger)
 
         return None
 
