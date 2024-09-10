@@ -22,7 +22,7 @@ class GenericInputProcessor:
         self.input_data = input_data_path
 
     @property
-    def input_data(self):
+    def input_data(self) -> list[dict]:
         """
         Input data in JSON format. Set from input_path by setter
 
@@ -31,7 +31,7 @@ class GenericInputProcessor:
         return self._input_data
 
     @input_data.setter
-    def input_data(self, path: str) -> [dict]:
+    def input_data(self, path: str) -> list[dict]:
         """
         SUBCLASSES MUST OVERRIDE THIS PROPERTY.
 
@@ -64,7 +64,6 @@ class GenericInputProcessor:
         :param field_mapping: {'old_key': 'new_key'} dictionary. Not nested.
         :param delete_non_mapped_fields: Boolean to indicate if fields not present in the map above should be deleted.
                Defaults False
-        :return:
         """
         for i, entity in enumerate(self.input_data):
             for key, value in field_mapping.items():
@@ -108,8 +107,8 @@ class XlsxInputProcessor(GenericInputProcessor):
     :param input_data: Path to the file with the input metadata.
     :param worksheet_name: Name of the worksheet to be processed.
     """
-    def __init__(self, input_data, worksheet_name):
-        self.worksheet_name = worksheet_name
+    def __init__(self, input_data: str, sheet_name: str = "Sheet1"):
+        self.sheet_name = sheet_name
         super().__init__(input_data)
 
     @GenericInputProcessor.input_data.setter
@@ -119,6 +118,6 @@ class XlsxInputProcessor(GenericInputProcessor):
 
         :param path: Path to the file with the input metadata.
         """
-        file = read_excel(path, engine='xlrd', sheet_name=self.worksheet_name).fillna(NaN).replace([NaN], [None])
+        file = read_excel(path, engine='xlrd', sheet_name=self.sheet_name).fillna(NaN).replace([NaN], [None])
         json_file = file.to_dict(orient='records')
         self._input_data = json_file
