@@ -14,14 +14,9 @@ and expert of that archive and for you all this information is very basic. But I
 before because the numpad had the inverse notation (Fun fact: [There's a reason for that](https://ux.stackexchange.com/questions/16666/why-do-numpads-on-keyboards-and-phones-have-reversed-layouts)),
 so just **WRITE IT**. It takes 5 seconds.
 
-## Extra functionality (Defined only in specific entities)
+## TO-DO
 
-### BioSample - Unit curation
-
-A good practice is to parse the strings being assigned to the metadata entity, and try to identify if they are units.
-
-However, that doesn't mean that it will be overwritten. We have warnings for that. Trying to identify automatically will
-result in excel-level gene symbol horror (remember that?), so the Biosample entity does warn you and provide you with
-the tools to correct it yourself.
-
-**Modify your data to include the units!!!!**
+BsdApi:
+- When submitting multiple entities, it iterates in chunks of x size - If a chunk fails, the previous would have been
+  already submitted, but that batch and the batches onwards will fail - Thinking about validating samples before doing
+  a batch submission, but that may make the process way slower. Need to test speed for that.
