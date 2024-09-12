@@ -269,6 +269,11 @@ class Biosample(GenericEntity):
         # Root values
         if key in ROOT_PROPERTIES:
             self.entity[key] = value
+        # Relationships
+        elif key in VALID_RELATIONSHIPS and self.check_accession(value):
+            self.add_relationship(source=self.accession,
+                                  target=value,
+                                  relationship=key)
         # characteristics
         else:
             characteristic = {}
