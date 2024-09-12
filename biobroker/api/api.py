@@ -4,7 +4,7 @@ import requests
 from os.path import join
 from requests.utils import requote_uri
 
-from progressbar import progressbar, AdaptiveETA, Percentage, FormatLabel, AnimatedMarker, Counter
+from progressbar import progressbar, AdaptiveETA, Percentage, FormatLabel, AnimatedMarker, Counter, ProgressBar
 
 from biobroker.api.exceptions import CantBeUpdatedApiError, CantBeUpdatedLocalError, ChecklistValidationError, \
     BiosamplesValidationError
@@ -14,6 +14,8 @@ from biobroker.authenticator import GenericAuthenticator
 from biobroker.generic.exceptions import MandatoryFunctionNotSet
 from biobroker.generic.logger import set_up_logger
 from biobroker.generic.utilities import slice_list
+
+## TODO: BsdApi Build self url. Self points to general biosamples...
 
 
 class GenericApi:
@@ -39,11 +41,11 @@ class GenericApi:
         :return: list of GenericEntity subclasses after archival/deposition.
         """
         if len(entities) > 1:
-            return self._submit_multiple(entities, **kwargs)
+            return self._submit_multiple(entities, kwargs)
         else:
-            return [self._submit(entities[0], **kwargs)]
+            return [self._submit(entities[0], kwargs)]
 
-    def _submit(self, entity: GenericEntity, **kwargs: dict) -> GenericEntity:
+    def _submit(self, entity: GenericEntity, kwargs: dict) -> GenericEntity:
         """
         Generic function for submitting an entity to an archive.
 
@@ -53,11 +55,11 @@ class GenericApi:
         """
         raise MandatoryFunctionNotSet(self.logger)
 
-    def _submit_multiple(self, entities: list[GenericEntity], **kwargs: dict) -> list[GenericEntity]:
+    def _submit_multiple(self, entities: list[GenericEntity], kwargs: dict) -> list[GenericEntity]:
         """
         Generic function for submitting multiple entities to an archive.
 
-        :param entity: List of subclasses of GenericEntity
+        :param entities: List of subclasses of GenericEntity
         :param kwargs: Keyword arguments needed for subclasses' method.
         :return: Submitted GenericEntity subclasses
         """
@@ -143,10 +145,11 @@ class BsdApi(GenericApi):
         super().__init__(authenticator, base_uri, verbose)
         self.bulk_accession_endpoint = join(self.base_uri.replace("biosamples/", "biosamples/v2/"), 'bulk-accession')
         self.bulk_submit_endpoint = join(self.base_uri.replace("biosamples/", "biosamples/v2/"), 'bulk-submit')
+        self.validate_endpoint = join(self.base_uri, 'validate')
         self.logger.info(f"Set up BSD API successfully: using base uri '{self.base_uri}'")
         self.relationship_types = ["derived_from", "same_as"]
 
-    def _submit(self, entity: Biosample, **kwargs: dict) -> Biosample:
+    def _submit(self, entity: Biosample, kwargs: dict) -> Biosample:
         """
         Submit a single Biosample entity to BSD.
 
@@ -160,7 +163,7 @@ class BsdApi(GenericApi):
             self._submit_errors(r)
         return Biosample(r.json())
 
-    def _submit_multiple(self, entities: list[Biosample], **kwargs: dict) -> list[Biosample]:
+    def _submit_multiple(self, entities: list[Biosample], kwargs: dict) -> list[Biosample]:
         """
         Submit a list of BioSample entities to biosamples, using the bulk-submit endpoint.
 
@@ -230,7 +233,8 @@ class BsdApi(GenericApi):
         is_invalid = BsdApi._is_invalid_for_update(entity)
         if is_invalid:
             raise CantBeUpdatedLocalError(sample_id=entity.id, reasons=is_invalid, logger=self.logger)
-        response = self.authenticator.put(url=entity['_links']['self']['href'], payload=entity.entity)
+        sample_url = os.path.join(self.base_uri, entity.accession)
+        response = self.authenticator.put(url=sample_url, payload=entity.entity)
         if response.status_code > 300:
             raise CantBeUpdatedApiError(sample_id=entity.id, response=response, logger=self.logger)
         return Biosample(response.json())
@@ -251,10 +255,24 @@ class BsdApi(GenericApi):
 
     # BioSamples-specific
 
+    def validate_sample(self, entity: Biosample):
+        """
+        Validate a sample before submission. The errors returned are the same as the ones you get when you submit, so
+        they are handled in the same way.
+
+        :param entity: Biosample entity to be validated.
+        :return:
+        """
+        r = self.authenticator.post(url=self.validate_endpoint, payload=entity.entity)
+        self._submit_errors(r)
+
     def process_relationships(self, entities: list[Biosample]) -> list[Biosample]:
         """
         Process the relationships from a list of entities. Assumes the relationships are defined in the metadata as
         'characteristics.derived_from/same_as', and that the entities are linked via their `name`, not accession.
+
+        If multiple relationships of the same type have to be defined, please use the `metadata_entity.delimiter`
+        as the input value (e.g. same_sample1||sample_sample2 under `same_as` property)
 
         :param entities: List of Biosample entities to update their relationships.
         :return: list of updated entities
@@ -263,8 +281,11 @@ class BsdApi(GenericApi):
         for entity in entities:
             for relationship_type in self.relationship_types:
                 if relationship_type in entity:
-                    entity.add_relationship(source=entity.accession, target=id_to_accession[entity[relationship_type]],
-                                            relationship=relationship_type)
+                    for split_relationship_value in entity[relationship_type]['text'].split(entity.delimiter):
+                        entity.add_relationship(source=entity.accession,
+                                                target=id_to_accession[split_relationship_value],
+                                                relationship=relationship_type)
+                    del entity[relationship_type]
         updated_entities = self.update(entities)
         return updated_entities
 
@@ -282,11 +303,26 @@ class BsdApi(GenericApi):
             attributes = dict()
         search_query = self._build_search_query(text, attributes)
         query_url = f"{self.base_uri}?{search_query}"
+
         response = self.authenticator.get(query_url).json()
-        samples = []
+        len_sample_search = response['page']['totalElements']
+        size = response['page']['size']
+        samples = response['_embedded']['samples']
+
+        progress_bar = ProgressBar(widgets=[FormatLabel('Retrieving samples: '),
+                                            Percentage(), " (", Counter(),
+                                            f"/{len_sample_search}) ",
+                                            AnimatedMarker(markers='🀱🀲🀳🀴🀵🀶🀷🀾🁅🁌🁓🁚🁡'), " ",
+                                            AdaptiveETA()], max_value=len_sample_search)
+
+        current = size
         while response['_links'].get('next'):
-            samples.extend(response['_embedded']['samples'])
             response = self.authenticator.get(response['_links']['next']['href']).json()
+            samples.extend(response['_embedded']['samples'])
+            progress_bar.update(current)
+            current += size
+        progress_bar.finish()
+
         return [Biosample(sample) for sample in samples]
 
     def _submit_errors(self, response: requests.Response) -> None:
@@ -306,22 +342,23 @@ class BsdApi(GenericApi):
         if "Checklist validation failed" in response.text:
             raise ChecklistValidationError(response.text, self.logger)
 
-        if response.status_code == 400 and "datapath" in response.text:
-            raise BiosamplesValidationError(response.json(), self.logger)
+        if response.status_code == 400 and "dataPath" in response.text:
+            raise BiosamplesValidationError(response.text, self.logger)
 
         return None
 
     @staticmethod
     def _build_search_query(text: str, attributes: dict) -> str:
         """
-        Build the search query for BSD. Attributes need to be joined.
+        Build the search query for BSD. Attributes need to be joined. Page=0 is specified to return pagination in the
+        BioSamples API (Not documented behaviour)
 
         :param text: Free text to search by.
         :param attributes: Dictionary of attributes and values to filter by.
         :return:
         """
         attributes_str = "&".join([f"filter=attr:{key}:{value}" for key, value in attributes.items()])
-        query = f"text={text}&{attributes_str}"
+        query = f"text={text}&{attributes_str}&page=0"
         return requote_uri(query)
 
     @staticmethod
@@ -336,5 +373,5 @@ class BsdApi(GenericApi):
             "Accession not set in metadata": entity.accession,
             "Invalid accession format": entity.check_accession(entity.accession)
         }
-        checks = [condition for condition, check in conditions.items() if check]
+        checks = [condition for condition, check in conditions.items() if not check]
         return checks if checks else False
