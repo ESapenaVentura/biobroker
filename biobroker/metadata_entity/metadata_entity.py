@@ -11,7 +11,7 @@ from biobroker.generic.logger import set_up_logger
 
 
 # MONKEY PATCHING JSON ENCODER TO MAKE ENTITIES JSON SERIALIZABLE #
-def _default(obj):
+def _default(self, obj):
     return getattr(obj.__class__, "to_json", _default.default)(obj)
 
 
@@ -263,8 +263,8 @@ class Biosample(GenericEntity):
         # Deal with datetimes - Specific to BioSamples. If anyone knows a cleaner way let me know please!
         if isinstance(value, datetime.datetime):
             value = value.strftime("%Y-%m-%dT%H:%M:%SZ")
-            if value.endswith('00:00:00Z'):
-                value = value.replace('00:00:00Z', '')
+            if value.endswith('T00:00:00Z'):
+                value = value.replace('T00:00:00Z', '')
 
         # Root values
         if key in ROOT_PROPERTIES:
@@ -312,7 +312,7 @@ class Biosample(GenericEntity):
         """
         if 'release' not in self:
             self.logger.warning(f"Sample {self.id}: release date was not set. Setting it to right now.")
-            self['release'] = datetime.datetime.today().strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+            self['release'] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
 
     def add_relationship(self, source, target, relationship):
         """
@@ -333,7 +333,7 @@ class Biosample(GenericEntity):
         self.entity['relationships'].append({
             "source": source,
             "target": target,
-            "relationship": relationship
+            "type": relationship
         })
 
     @staticmethod
@@ -386,7 +386,7 @@ class Biosample(GenericEntity):
                     case _:
                         # Returning units and ontologyTerm's to their natural habitat
                         flattened_json[f"{field_name}{self.delimiter}{tag}"] = value
-            flattened_json[field_name] = "||".join([f"{v['text']}{v.get('unit', '')}" for v in values])
+            flattened_json[field_name] = "||".join([f"{v['text']}" for v in values])
         return flattened_json
 
     @staticmethod
