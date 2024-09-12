@@ -40,7 +40,8 @@ class CantBeUpdatedApiError(Exception):
         :param logger: subclasss logger to log the error message to.
         """
         try:
-            message = f"Sample with ID {sample_id} can't be updated - Error: {response.json()['error']}"
+            message = f"Sample with ID {sample_id} can't be updated:\n\t-Error type: {response.json()['error']}" \
+                      f"\n\t-Error message: {response.json()['message']}"
         except JSONDecodeError:
             # Validation against checklist failed, returns a non-jsonable message
             validation_errors = json.loads(response.text.split('failed: ')[2])
