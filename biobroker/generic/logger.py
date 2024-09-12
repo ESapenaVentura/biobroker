@@ -30,6 +30,8 @@ def set_up_logger(instance_object: GenericApi | GenericAuthenticator | GenericEn
     """
     level = logging.INFO if verbose else logging.WARNING
     logger = logging.getLogger(instance_object.__class__.__name__)
+    if logger.hasHandlers():
+        return logger  # Avoid duplicating handlers when multiple instances of the same class are spawned
     logger.setLevel(logging.DEBUG)
     formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
