@@ -4,14 +4,13 @@ import json
 from json.decoder import JSONDecodeError
 
 
-def parse_checklist_validation_errors(response_text: str):
+def parse_checklist_validation_errors(validation_errors: list[dict]):
     """
     Parse a checklist validation error and return it in a printable state.
 
-    :param response_text: Response text from the validation/submission request that failed checklist validation.
+    :param validation_errors: Response list with validation error dictionaries, containing `dataPath` and `errors`.
     :return: printable string.
     """
-    validation_errors = json.loads(response_text.split('failed: ')[2])
     validation_errors_str = "\n\t- ".join([f"{validation_errors[i]['dataPath']}: "
                                            f"{','.join(validation_errors[i]['errors'])}"
                                            for i in range(len(validation_errors))])
@@ -44,7 +43,8 @@ class CantBeUpdatedApiError(Exception):
             message = f"Sample with ID {sample_id} can't be updated - Error: {response.json()['error']}"
         except JSONDecodeError:
             # Validation against checklist failed, returns a non-jsonable message
-            validation_errors_str = parse_checklist_validation_errors(response.text)
+            validation_errors = json.loads(response.text.split('failed: ')[2])
+            validation_errors_str = parse_checklist_validation_errors(validation_errors)
             message = f"Sample with ID {sample_id} failed update due to checklist errors:\n\t- {validation_errors_str}"
         logger.error(message)
         super().__init__(message)
@@ -66,7 +66,7 @@ class CantBeUpdatedLocalError(Exception):
 
 
 class BiosamplesValidationError(Exception):
-    def __init__(self, error_list: list, logger: logging.Logger):
+    def __init__(self, response_text: str, logger: logging.Logger):
         """
         Raise a Biosamples minimal checklist validation error
         (https://www.ebi.ac.uk/biosamples/schemas/certification/biosamples-minimal.json)
@@ -74,8 +74,9 @@ class BiosamplesValidationError(Exception):
         :param error_list: list of errors returned from response.
         :param logger: subclass logger to log the error message to.
         """
-        delimiter = "\n\t- "
-        self.message = f"Found following errors in sample validation:{delimiter}{delimiter.join(error_list)}"
+        validation_errors = json.loads(response_text)
+        errors_str = parse_checklist_validation_errors(validation_errors)
+        self.message = f"Found following errors in sample validation:\n\t- {errors_str})"
         logger.error(self.message)
         super().__init__(self.message)
 
@@ -91,7 +92,8 @@ class ChecklistValidationError(Exception):
         :param logger: subclass logger to log the error message to.
         """
         # Validation against checklist failed, returns a non-jsonable message
-        validation_errors_str = parse_checklist_validation_errors(response_text)
+        validation_errors = json.loads(response_text.split('failed: ')[2])
+        validation_errors_str = parse_checklist_validation_errors(validation_errors)
         self.message = f"Samples failed checklist validation with the following errors: \n\t- {validation_errors_str}"
         logger.error(self.message)
         super().__init__(self.message)
