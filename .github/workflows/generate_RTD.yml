@@ -30,5 +30,3 @@ jobs:
         with:
           commit_message: "Updating docs"
           file_pattern: 'docs/*'
-  lint-ruff:
-    name: Lint the repository using ruff
