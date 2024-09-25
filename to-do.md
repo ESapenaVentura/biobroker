@@ -1,0 +1,12 @@
+- APIs
+    - Improve on submit error reporting
+        - Current known bug for BSDAPI: submit_multiple currently batches submit requests. If first batch succeeds but second
+          fails, it will submit the first batch and error out, returning naaaaaathing.
+- Create examples - Via python notebooks
+- Create pytests
+- Create a `viewer`
+    - Simple interface, loads filled out metadata entities
+    - Can call `save`, `submit`, `load` from metadataEntities
+    - Maybe use https://jsonforms.io/docs/tutorial/custom-layouts ?
+      - Nah something simpler, a tkinter interface should suffice.
+- Find the perfect chars for progress bar <span style="color:red">**VERY, VERY IMPORTANT**</span>

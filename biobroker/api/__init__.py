@@ -42,5 +42,6 @@ Aspects to improve:
 
 from .api import GenericApi, BsdApi
 
+#__all__ = [e.__name__ for e in __all_exports]
 # This lets Sphinx know you want to document package.module.Class as package.Class.
 __all__ = ['GenericApi', 'BsdApi']

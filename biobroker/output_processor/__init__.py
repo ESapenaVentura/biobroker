@@ -18,9 +18,10 @@ Subclasses of GenericOutputProcessor must define the following methods/propertie
 
 **CURRENT SUBCLASSES**
 
-- TsvInputProcessor
-- XlsxInputProcessor
+- TsvOutputProcessor
+- XlsxOutputProcessor
 
 """
 
 from .output_processor import GenericOutputProcessor, TsvOutputProcessor, XlsxOutputProcessor
+__all__ = ['GenericOutputProcessor', 'TsvOutputProcessor', 'XlsxOutputProcessor']

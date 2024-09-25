@@ -46,3 +46,4 @@ Aspects to improve:
 """
 
 from .metadata_entity import GenericEntity, Biosample
+__all__ = ['GenericEntity', 'Biosample']

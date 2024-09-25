@@ -35,3 +35,4 @@ Aspects to improve:
 """
 
 from .input_processor import GenericInputProcessor, TsvInputProcessor, XlsxInputProcessor
+__all__ = ['GenericInputProcessor', 'TsvInputProcessor', 'XlsxInputProcessor']
