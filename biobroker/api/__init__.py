@@ -1,7 +1,4 @@
 """
-API Module
-==========
-
 API module. This module consists of several classes whose function is to provide with the necessary endpoints
 for interacting with the archival services.
 
