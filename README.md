@@ -40,7 +40,7 @@ is a module that loads all of them, but should be generic enough that only one n
 
 A graphical representation of the overall infrastructure can be seen below:
 
-```{mermaid}
+```mermaid
 
 graph LR;
 
