@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 requires-python = ">= 3.10"
 name = "biobroker"
 description = "A package to easily broker data and metadata to repositories."
-version = "0.0.3"
+version = "0.0.4"
 authors = [
   {name = "Enrique Sapena Ventura", email = "sapenaventura@gmail.com"},
 ]
@@ -25,9 +25,8 @@ dependencies = [
   "pandas~=2.0.3",
   "numpy~=1.23.1",
   "requests>=2.31.0",
-  "xlrd==2.0.1",
+  "openpyxl==3.1.2",
   "progressbar2~=4.4.2",
-  "unit_parse~=0.1.11"
 ]
 
 [project.urls]
