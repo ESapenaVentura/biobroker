@@ -37,3 +37,5 @@ Aspects to improve:
 """
 
 from .authenticator import GenericAuthenticator, WebinAuthenticator
+
+__all__ = ['GenericAuthenticator', 'WebinAuthenticator']

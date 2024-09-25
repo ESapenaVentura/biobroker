@@ -4,7 +4,7 @@ import requests
 from requests.adapters import HTTPAdapter
 from requests.packages.urllib3.util.retry import Retry
 
-from biobroker.authenticator.exceptions import *
+from biobroker.authenticator.exceptions import WrongUserOrPassword, UsernameNotValid
 from biobroker.generic.exceptions import MandatoryFunctionNotSet
 from biobroker.generic.logger import set_up_logger
 
@@ -145,7 +145,7 @@ class WebinAuthenticator(GenericAuthenticator):
     """
     def __init__(self, username: str, password: str, verbose: bool = False):
         environment = 'dev' if 'dev' == os.environ.get('API_ENVIRONMENT', '') else ''
-        base_uri = f"https://www.ebi.ac.uk/ena/submit/webin/auth".replace('www', f"www{environment}")
+        base_uri = "https://www.ebi.ac.uk/ena/submit/webin/auth".replace('www', f"www{environment}")
 
         super().__init__(base_uri, username, password, verbose)
         self.validate_username(username)
