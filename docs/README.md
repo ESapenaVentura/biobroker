@@ -111,7 +111,7 @@ Regarding new entities:
       it private.
 
 
-# Generate documentation
+## Generate documentation
 
 To generate documentation:
 
@@ -121,24 +121,5 @@ To generate documentation:
 3. `cd docs`
 4. `make clean html`
 
-Currently, the documentation is generated manually - will create some GH actions in the future. Just not prioritising
-it at the moment.
-
-
-# TO-DO
-- pypiiiiii
-- APIs
-    - Improve on submit error reporting
-        - Current known bug for BSDAPI: submit_multiple currently batches submit requests. If first batch succeeds but second
-          fails, it will submit the first batch and error out, returning naaaaaathing.
-- Prepare tests with pytest <span style="color:red">**WIP**</span>
-- Create "final" docs - Set up GH page
-    - Make them prettier - Look at this guide: https://samnicholls.net/2016/06/15/how-to-sphinx-readthedocs/
-- Create examples - Via python notebooks
-- Create pytests
-- Create a `viewer`
-    - Simple interface, loads filled out metadata entities
-    - Can call `save`, `submit`, `load` from metadataEntities
-    - Maybe use https://jsonforms.io/docs/tutorial/custom-layouts ?
-      - Nah something simpler, a tkinter interface should suffice.
-- Find the perfect chars for progress bar <span style="color:red">**VERY, VERY IMPORTANT**</span>
+This is usually not needed, as there is a GH action set-up to generate the documentation automatically. Use it only if
+you're not experienced with sphinx/unsure of how changes will look like in the RTD docs.
