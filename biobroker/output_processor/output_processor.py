@@ -71,4 +71,4 @@ class XlsxOutputProcessor(GenericOutputProcessor):
 
         :param dataframe: Dataframe containing the flattened metadata from the GenericEntity subclasses.
         """
-        dataframe.to_excel(self.path, index=False, sheet_name=self.sheet_name, engine='xlrd')
+        dataframe.to_excel(self.path, index=False, sheet_name=self.sheet_name, engine='openpyxl')

@@ -118,6 +118,6 @@ class XlsxInputProcessor(GenericInputProcessor):
 
         :param path: Path to the file with the input metadata.
         """
-        file = read_excel(path, engine='xlrd', sheet_name=self.sheet_name).fillna(NaN).replace([NaN], [None])
+        file = read_excel(path, engine='openpyxl', sheet_name=self.sheet_name).fillna(NaN).replace([NaN], [None])
         json_file = file.to_dict(orient='records')
         self._input_data = json_file
