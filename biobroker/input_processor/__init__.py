@@ -3,35 +3,28 @@ Input metadata processor. The goal of this module is to take an input file, read
 dictionaries containing the metadata for the different entities. Once in a flattened JSON state, they can be processed
 into all the different entities.
 
-Mandatory arguments:
+**Mandatory arguments**:
 
 - input_data: Path to the input file or loaded content. To be decided by subclass processor.
 
-Optional arguments:
+**Optional arguments**:
 
 - verbose: set to `True` if you want `INFO` and above-level logging events. If not set or set to False, only `WARNING`
-           and above will be displayed
+  and above will be displayed
 
-Subclasses of GenericInputProcessor must define the following methods/properties:
+**Subclasses of GenericInputProcessor must define the following methods/properties**:
 
 - @input_data.setter
 
-Aspects to improve:
+**Aspects to improve**:
 
-- Currently, the `process` function can fail at any point if any entity fails to validate. This could be handled in
-  2 ways:
+- Currently, the :func:`~biobroker.input_processor.GenericInputProcessor.process`
+  function can fail at any point if any entity fails to validate. This could be handled in 2 ways:
 
     - Catch all exceptions (meh) log them, and create the rest of the entities.
-    - Current behaviour: fail miserably and not return anything. I really like this option as, for me, an input
-                         (spreadsheet, tsv file, etc) probably has meaning together and should remain this way. It could
-                         be improved by logging all errors, then failing.
-
-
-**CURRENT SUBCLASSES**
-
-- TsvOutputProcessor
-- XlsxOutputProcessor
-
+    - `Current behaviour`: fail miserably and not return anything. I really like this option as, for me, an input
+      (spreadsheet, tsv file, etc) probably has meaning together and should remain this way. It could
+      be improved by logging all errors, then failing.
 """
 
 from .input_processor import GenericInputProcessor, TsvInputProcessor, XlsxInputProcessor

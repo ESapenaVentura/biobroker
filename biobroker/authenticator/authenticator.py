@@ -31,6 +31,7 @@ class GenericAuthenticator:
     def auth_endpoint(self):
         """
         Name of the endpoint to authenticate
+
         :return: string
         """
         return self._auth_endpoint
@@ -162,6 +163,7 @@ class WebinAuthenticator(GenericAuthenticator):
     def token(self, _):
         """
         Token setter for property. Returns a token from the ENA Webin service.
+
         :param _: Leave blank or pass None
         :return:
         """
@@ -182,7 +184,9 @@ class WebinAuthenticator(GenericAuthenticator):
     # Validation methods
     def validate_username(self, username: str):
         """
-        Validate a username. For webin, all usernames start with "Webin-"
+        Validate a username. For webin, all usernames start with `Webin-`. Can raise
+        :exc:`~biobroker.authenticator.exceptions.UsernameNotValid`
+
         :param username: Webin username.
         :return:
         """

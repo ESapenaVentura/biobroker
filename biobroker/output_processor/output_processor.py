@@ -45,8 +45,8 @@ class TsvOutputProcessor(GenericOutputProcessor):
 
     def _save(self, dataframe: pandas.DataFrame):
         """
-        Save the resulting dataframe from :func:`~broker.output_processor.generic_output_processor.save` into a tsv,
-        using pandas functionality. NO, the delimiter is not selectable. Create another subclass if you want that.
+        Save the resulting dataframe from :func:`~GenericOutputProcessor.save` into a tsv,
+        using pandas functionality. NO, the delimiter is not customizable. Create another subclass if you want that.
         TSV means `TAB-Separated Values`, not comma, not pipes, not anything else. You weirdo.
 
         :param dataframe: Dataframe containing the flattened metadata from the GenericEntity subclasses.
@@ -67,7 +67,7 @@ class XlsxOutputProcessor(GenericOutputProcessor):
 
     def _save(self, dataframe: pandas.DataFrame):
         """
-        Save the resulting dataframe from :func:`~broker.output_processor.generic_output_processor.save` into an excel.
+        Save the resulting dataframe from :func:`~GenericOutputProcessor.save` into an excel.
 
         :param dataframe: Dataframe containing the flattened metadata from the GenericEntity subclasses.
         """

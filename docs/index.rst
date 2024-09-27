@@ -7,21 +7,10 @@ README
 
    README.md
 
-Modules
-=======
-
 .. toctree::
    :maxdepth: 2
    :glob:
    :titlesonly:
-   :caption: Modules
+   :caption: Code documentation
 
    *biobroker*
-
-
-Indices and tables
-==================
-
-* :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

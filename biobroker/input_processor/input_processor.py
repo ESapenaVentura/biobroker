@@ -11,7 +11,7 @@ from biobroker.metadata_entity import GenericEntity
 
 class GenericInputProcessor:
     """
-    Generic input processor
+    Generic input processor.
 
     :param input_data_path: Path to the input file.
     :param verbose: Boolean indicating if the logger should be verbose.

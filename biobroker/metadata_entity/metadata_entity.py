@@ -119,22 +119,6 @@ class GenericEntity:
         return json.loads(json.dumps(self.entity, default=str))
 
 
-ROOT_PROPERTIES = ['name', 'release', 'relationships', 'accession', 'sraAccession', 'webinSubmissionAccountId',
-                   'status', 'update', 'characteristics', 'submittedVia', 'create', '_links', 'submitted', 'taxId',
-                   'organization']
-"""List of properties that may be present at the root of a BioSamples JSON."""
-VALID_TAGS = ['text', 'ontologyTerms', 'unit']
-"""List of valid tags for the characteristics"""
-VALID_RELATIONSHIPS = ["derived_from", "same_as"]
-"""List of valid relationships for samples"""
-
-"""
-TODO list
-- Read from flattened source - especially, special values such as relationships, which are flattened into derived from, 
-  same as, etc
-"""
-
-
 class Biosample(GenericEntity):
     """
     Biosamples metadata entity. Contains the necessary information to process a non-nested JSON into a valid Biosamples
@@ -149,6 +133,11 @@ class Biosample(GenericEntity):
                       :func:`~broker.metadata_entity.biosample.Biosample.__setitem__`, point 4.
     :param verbose: True if logger should be set to INFO. Default WARNING.
     """
+    ROOT_PROPERTIES = ['name', 'release', 'relationships', 'accession', 'sraAccession', 'webinSubmissionAccountId',
+                       'status', 'update', 'characteristics', 'submittedVia', 'create', '_links', 'submitted', 'taxId',
+                       'organization']
+    VALID_TAGS = ['text', 'ontologyTerms', 'unit']
+    VALID_RELATIONSHIPS = ["derived_from", "same_as"]
     def __init__(self, metadata_content: dict, delimiter: str = "||", verbose: bool = False):
         self.delimiter = delimiter
         super().__init__(metadata_content, verbose)
@@ -157,6 +146,7 @@ class Biosample(GenericEntity):
     def id(self):
         """
         Return the property 'id', extracting it from the 'name' property. Defaults to an empty string.
+
         :return:
         """
         return self.entity.get('name', '')
@@ -165,6 +155,7 @@ class Biosample(GenericEntity):
     def accession(self) -> str:
         """
         Return the property 'accesssion', extracting it from the 'accession'. Defaults to an emtpy string
+
         :return:
         """
         return self.entity.get('accession', '')
@@ -194,11 +185,8 @@ class Biosample(GenericEntity):
 
     def flatten(self) -> dict:
         """
-        Flatten the Biosample.entity property and return a non-nested dictionary. This will be mostly used for
-        output generation. Please when expanding this function use match-case statements, as they are cleaner and
-        easier to understand than else-if.
-
-        TODO: Biosamples have more complex data structures - Need to add those
+        Flatten the :attr:`~Biosample.entity` property and return a non-nested dictionary. This will be mostly used for
+        output generation.
 
         :return: flattened dictionary
         """
@@ -249,7 +237,7 @@ class Biosample(GenericEntity):
         In the Biosamples case, I decided to add 4 checks:
 
         - First, it evaluates if it's a datetime object. Datetime objects are not jsonable.
-        - Second, evaluate if the key is part of the :data:`ROOT_PROPERTIES`. These are set as-is.
+        - Second, evaluate if the key is part of the :attr:`~Biosample.ROOT_PROPERTIES`. These are set as-is.
         - Third, evaluate if it's a string. If so, evaluate if there are possible units in the string and log it to a
           warning. I tried automatic conversion but that's a mistake - Let the user deal with it.
         - Fourth, tags for the attributes can be set up from the flattened input dictionary. As such, each sample has
@@ -267,10 +255,10 @@ class Biosample(GenericEntity):
                 value = value.replace('T00:00:00Z', '')
 
         # Root values
-        if key in ROOT_PROPERTIES:
+        if key in Biosample.ROOT_PROPERTIES:
             self.entity[key] = value
         # Relationships
-        elif key in VALID_RELATIONSHIPS and self.check_accession(value):
+        elif key in Biosample.VALID_RELATIONSHIPS and self.check_accession(value):
             self.add_relationship(source=self.accession,
                                   target=value,
                                   relationship=key)
@@ -326,7 +314,7 @@ class Biosample(GenericEntity):
 
         :param source: source entity accession (Must be equal to entity)
         :param target: target sample accession
-        :param relationship: Relationship between source and target. Valid relationships: :data:`VALID_RELATIONSHIPS`
+        :param relationship: Relationship between source and target. Valid relationships: :attr:`~Biosample.VALID_RELATIONSHIPS`
         """
         if not self.accession == source:
             raise RelationshipInvalidSourceError(logger=self.logger, source=source, sample_id=self.id)
@@ -363,7 +351,7 @@ class Biosample(GenericEntity):
         :return: flattened dictionary with the processed relationships incorporated.
         """
         source_accession = self.accession
-        relationship_types = set(VALID_RELATIONSHIPS)
+        relationship_types = set(Biosample.VALID_RELATIONSHIPS)
         for relationship in relationships:
             if relationship['source'] != source_accession:
                 continue
@@ -397,13 +385,13 @@ class Biosample(GenericEntity):
     @staticmethod
     def _tag_is_valid(tag: str) -> bool:
         """
-        Check if a tag is valid. Tags are evaluated against the :data:`VALID_TAGS` global. VALID_TAGS extracted from:
+        Check if a tag is valid. Tags are evaluated against the :attr:`~Biosample.VALID_TAGS` global. VALID_TAGS extracted from:
         https://www.ebi.ac.uk/biosamples/docs/references/api/submit#_sample
 
         :param tag: string with the tag name
         :return: True if valid, False if invalid
         """
-        return tag in VALID_TAGS
+        return tag in Biosample.VALID_TAGS
 
     @staticmethod
     def guidelines() -> str:

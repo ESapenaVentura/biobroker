@@ -1,26 +1,24 @@
-biobroker.input\_processor package
-==================================
+Input processor
+===============
+.. currentmodule:: biobroker.input_processor
+
+.. autosummary::
+   :nosignatures:
+
+    GenericInputProcessor
+    TsvInputProcessor
+    XlsxInputProcessor
 
 .. automodule:: biobroker.input_processor
    :members:
    :undoc-members:
    :show-inheritance:
 
-Submodules
+
+Exceptions
 ----------
 
-biobroker.input\_processor.exceptions module
---------------------------------------------
-
 .. automodule:: biobroker.input_processor.exceptions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-biobroker.input\_processor.input\_processor module
---------------------------------------------------
-
-.. automodule:: biobroker.input_processor.input_processor
    :members:
    :undoc-members:
    :show-inheritance:
