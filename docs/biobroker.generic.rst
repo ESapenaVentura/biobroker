@@ -1,32 +1,30 @@
-biobroker.generic package
-=========================
+Generic
+=======
 
 .. automodule:: biobroker.generic
    :members:
    :undoc-members:
    :show-inheritance:
 
-Submodules
-----------
 
-biobroker.generic.exceptions module
------------------------------------
+Exceptions
+----------
 
 .. automodule:: biobroker.generic.exceptions
    :members:
    :undoc-members:
    :show-inheritance:
 
-biobroker.generic.logger module
--------------------------------
+Logger
+------
 
 .. automodule:: biobroker.generic.logger
    :members:
    :undoc-members:
    :show-inheritance:
 
-biobroker.generic.utilities module
-----------------------------------
+Utilities
+---------
 
 .. automodule:: biobroker.generic.utilities
    :members:

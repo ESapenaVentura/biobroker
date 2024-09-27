@@ -6,3 +6,7 @@ library functionality:
 - Retrieve: :func:`broker.wrangler.Wrangler.retrieve_entities`
 - Save: :func:`broker.wrangler.Wrangler.save_results`
 """
+from biobroker.wrangler.wrangler import Wrangler
+
+# This lets Sphinx know you want to document package.module.Class as package.Class.
+__all__ = ['Wrangler']

@@ -9,18 +9,18 @@ If unsure, look at the "Biosample" subclass to understand how this is implemente
 The base generic entity also defines a custom JSON encoder, to avoid JSON.dumps issues. Any class not serializable will
 be turned to string.
 
-Mandatory arguments:
+**Mandatory arguments**:
 
     - metadata_content: Metadata content for the entity, in JSON format.
     - field_mapping: Map <archive_key_name>:<metadata_content_key_name> in JSON format
     - keep_non_mapped_fields: Boolean, wether to keep the non-mapped fields.
 
-Optional arguments:
+**Optional arguments**:
 
 - verbose: set to `True` if you want `INFO` and above-level logging events. If not set or set to False, only `WARNING`
-           and above will be displayed
+  and above will be displayed
 
-Subclasses of GenericEntity must define the following methods/properties:
+**Subclasses of GenericEntity must define the following methods/properties**:
 
 - @GenericEntity.setter
 - id property
@@ -29,21 +29,18 @@ Subclasses of GenericEntity must define the following methods/properties:
 - flatten
 - dictionary special methods ('__setitem__', '__delitem__', '__getitem__', '__contains__')
 
-Subclasses of GenericEntity SHOULD define the following methods/properties:
+**Subclasses of GenericEntity SHOULD define the following methods/properties**:
 
 - guidelines
 
-Aspects to improve:
+**Aspects to improve**:
 
 - Biosamples entity: taxonId or organism must be set up. Currently allows entities to be created without those fields.
 - Biosamples entity: Currently the root keys are hardcoded in the submodule. I wonder what would be the best way to
   indicate them without complicating the code and depending too much on external files. These are not bound to change
   much - but still, not good practice to have them in the code.
-
-**CURRENT SUBCLASSES**
-
-- Biosample
 """
 
 from .metadata_entity import GenericEntity, Biosample
+
 __all__ = ['GenericEntity', 'Biosample']
