@@ -70,29 +70,54 @@ Examples can be found under the `examples` folder. <span style="color:red">**WIP
 Further documentation, including extended definitions and restrictions/requirements for all classes will
 be given below; for code-generated documentation, please refer to the docs.
 
-## Install
+## How-to
+
+### Install
 
 ```shell
 pip3 install biobroker
 ```
 
-## How to run
+### Run
 
 This library does not support CLI access at the moment (Maybe in the future I could think of a CLI; although I would
 much rather have a simple GUI). As such, you will have to install and write scripts using the objects
 
-Please see the examples folder.
+Please see the [examples](https://github.com/ESapenaVentura/biobroker/examples) folder.
 
-Could include:
-- [ ] From spreadsheet to biosamples
-- [ ] From spreadsheet to biosamples, with checklist validation
-
-## Environment variables
+#### Environment variables
 
 - `BROKER_LOG`: Path to store the log for the execution of the library. Defaults to `broker_log.txt` if not set.
 - `API_ENVIRONMENT`: Environment to be used by the API/Auth service.
 
-## Notes for developers.
+### Generate documentation
+
+To generate documentation:
+
+1. Go to the root of the repository: `cd biobroker`
+2. `cd docs`
+3. `make clean html`
+
+This is usually not needed, as there is a GH action set-up to generate the documentation automatically. Use it only if
+you're not experienced with sphinx/unsure of how changes will look like in the RTD docs.
+
+#### Adding a new class
+
+If you add a new subclass, please add it under the `autosummary` directive in the RST file. You can see the examples
+in the existing `docs/` folder.
+
+#### Re-creating RST files from scratch
+
+If the RST files need to be regenerated, it can be done as so:
+
+```commandline
+sphinx-apidoc -Mf -o docs biobroker
+```
+
+This will regenerate the rst files with module content first! Just as I like it. However, we almost never want to
+regenerate the RST files - So please don't do this without opening an issue and a related PR.
+
+## Notes for developers
 Regarding documentation:
 
 - When adding <span style="color:red">development notes</span> that are specific to a submodule, please add them under "README.md" within the
@@ -109,17 +134,4 @@ Regarding new entities:
     - If it's used by external entities (e.g. `api` object accessing a `metadata_entity` method), don't make it private
     - If it's just used by the entity internally (e.g. `metadata_entity` calling a function to process certain data), make
       it private.
-
-
-## Generate documentation
-
-To generate documentation:
-
-1. Go to the root of the repository: `cd biobroker`
-2. Run the following sphinx command: `sphinx-apidoc -Mf -o docs biobroker`. This will regenerate the rst files with 
-   module content first! Just as I like it.
-3. `cd docs`
-4. `make clean html`
-
-This is usually not needed, as there is a GH action set-up to generate the documentation automatically. Use it only if
-you're not experienced with sphinx/unsure of how changes will look like in the RTD docs.
+- Add the new subclass under the '__init__.py' document, both in `__all__` and as an import

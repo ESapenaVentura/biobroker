@@ -1,26 +1,22 @@
-biobroker.wrangler package
-==========================
+Wrangler
+========
+.. currentmodule:: biobroker.wrangler
+
+.. autosummary::
+   :nosignatures:
+
+    Wrangler
+
 
 .. automodule:: biobroker.wrangler
    :members:
    :undoc-members:
    :show-inheritance:
 
-Submodules
+Exceptions
 ----------
 
-biobroker.wrangler.exceptions module
-------------------------------------
-
 .. automodule:: biobroker.wrangler.exceptions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-biobroker.wrangler.wrangler module
-----------------------------------
-
-.. automodule:: biobroker.wrangler.wrangler
    :members:
    :undoc-members:
    :show-inheritance:

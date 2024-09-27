@@ -1,24 +1,21 @@
-biobroker.authenticator package
+Authenticator
 ===============================
+
+.. currentmodule:: biobroker.authenticator
+
+.. autosummary::
+   :nosignatures:
+
+    GenericAuthenticator
+    WebinAuthenticator
 
 .. automodule:: biobroker.authenticator
    :members:
    :undoc-members:
    :show-inheritance:
 
-Submodules
+Exceptions
 ----------
-
-biobroker.authenticator.authenticator module
---------------------------------------------
-
-.. automodule:: biobroker.authenticator.authenticator
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-biobroker.authenticator.exceptions module
------------------------------------------
 
 .. automodule:: biobroker.authenticator.exceptions
    :members:

@@ -68,7 +68,8 @@ class GenericApi:
     def retrieve(self, accession: list[str]) -> list[GenericEntity]:
         """
         Generic function for retrieving one or more entities accessing the API via a/some unique identifier/s
-        (accession). Depending on the type of input parameter, calls `self._retrieve` or `self._retrieve_multiple`.
+        (accession). Depending on the type of input parameter, calls :func:`~GenericApi._retrieve` or
+        :func:`~GenericApi._retrieve_multiple`.
 
         :param accession: Unique identifier for the entity. Can be a string or a list of strings.
 
@@ -241,10 +242,11 @@ class BsdApi(GenericApi):
 
     def _update_multiple(self, entities: list[Biosample]) -> list[Biosample]:
         """
-        Updates multiple samples in the BSD database. Since they can only be updated once at a time, calls _update
-        function once per sample in list.
-        :param entities:
-        :return:
+        Updates multiple samples in the BSD database. Since they can only be updated once at a time, calls
+        :func:`~Biosample._update` once per sample in list.
+
+        :param entities: List of Biosample entities to update
+        :return: List with updated Biosample entities
         """
         return [self._update(entity) for entity in progressbar(entities,
                                                                widgets=[FormatLabel('Updating samples: '),
@@ -268,11 +270,12 @@ class BsdApi(GenericApi):
 
     def process_relationships(self, entities: list[Biosample]) -> list[Biosample]:
         """
-        Process the relationships from a list of entities. Assumes the relationships are defined in the metadata as
-        'characteristics.derived_from/same_as', and that the entities are linked via their `name`, not accession.
+        Process the relationships from a list of submitted entities. Assumes the relationships are defined in the
+        metadata as `characteristics.derived_from/same_as`, and that the entities are linked via their `name`,
+        not accession.
 
-        If multiple relationships of the same type have to be defined, please use the `metadata_entity.delimiter`
-        as the input value (e.g. same_sample1||sample_sample2 under `same_as` property)
+        If multiple relationships of the same type have to be defined, please use the :attr:`~biobroker.metadata_entity.Biosample.delimiter`
+        as the input value (e.g. same_sample1||same_sample2 under `same_as` property)
 
         :param entities: List of Biosample entities to update their relationships.
         :return: list of updated entities
@@ -289,7 +292,7 @@ class BsdApi(GenericApi):
         updated_entities = self.update(entities)
         return updated_entities
 
-    def search_samples(self, text: str = "", attributes=None) -> list[Biosample] | list:
+    def search_samples(self, text: str = "", attributes=None) -> list[Biosample]:
         """
         Search for samples in the Biosamples database. Can either search using free text (Can be improved using the
         query syntax specified here: https://www.ebi.ac.uk/ebisearch/documentation) or by attributes' values. For the
@@ -331,10 +334,8 @@ class BsdApi(GenericApi):
         handles the type and display of errors during submission.
 
         Errors being raised:
-            - :exc:ChecklistValidationError : Checklist validation has failed
-            - :exc:BiosamplesValidationError: BSD minimal sample checklist error. Returned differently, because why not
-
-        # TODO: Add more errors.
+            - :exc:`~biobroker.api.exceptions.ChecklistValidationError` : Checklist validation has failed
+            - :exc:`~biobroker.api.exceptions.BiosamplesValidationError` : BSD minimal sample checklist error. Returned differently, because why not
 
         :param response: response obtained during submission. Usually r.status_code > 300
         :return: None if no errors are detected.
@@ -351,7 +352,7 @@ class BsdApi(GenericApi):
     def _build_search_query(text: str, attributes: dict) -> str:
         """
         Build the search query for BSD. Attributes need to be joined. Page=0 is specified to return pagination in the
-        BioSamples API (Not documented behaviour)
+        BioSamples API (Non-documented behaviour)
 
         :param text: Free text to search by.
         :param attributes: Dictionary of attributes and values to filter by.

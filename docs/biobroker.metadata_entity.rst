@@ -1,26 +1,24 @@
-biobroker.metadata\_entity package
-==================================
+Metadata entity
+===============
+.. currentmodule:: biobroker.metadata_entity
+
+.. autosummary::
+   :nosignatures:
+
+    GenericEntity
+    Biosample
+
 
 .. automodule:: biobroker.metadata_entity
    :members:
    :undoc-members:
    :show-inheritance:
 
-Submodules
+
+Exceptions
 ----------
 
-biobroker.metadata\_entity.exceptions module
---------------------------------------------
-
 .. automodule:: biobroker.metadata_entity.exceptions
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-biobroker.metadata\_entity.metadata\_entity module
---------------------------------------------------
-
-.. automodule:: biobroker.metadata_entity.metadata_entity
    :members:
    :undoc-members:
    :show-inheritance:

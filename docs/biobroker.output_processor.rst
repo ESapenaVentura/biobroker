@@ -1,18 +1,15 @@
-biobroker.output\_processor package
-===================================
+Output processor
+================
+.. currentmodule:: biobroker.output_processor
+
+.. autosummary::
+   :nosignatures:
+
+    GenericOutputProcessor
+    TsvOutputProcessor
+    XlsxOutputProcessor
 
 .. automodule:: biobroker.output_processor
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-Submodules
-----------
-
-biobroker.output\_processor.output\_processor module
-----------------------------------------------------
-
-.. automodule:: biobroker.output_processor.output_processor
    :members:
    :undoc-members:
    :show-inheritance:

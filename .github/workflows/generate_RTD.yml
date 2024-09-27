@@ -1,11 +1,13 @@
 name: All actions related to documentation
 
 on:
-  push
+  push:
+    paths:
+      - README.md
 
 jobs:
   create-RTD:
-    name: Update the ReadTheDocs documentation
+    name: Update the ReadTheDocs documentation if README has been modified
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,11 +19,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements-dev.txt
-      - name: Create the documentation
-        run: |
-          sphinx-apidoc -Mf -o docs biobroker
-          cd docs
-          make clean html
       - name: Copy README and adjust mermaid for RTD
         run: |
           cp README.md docs/README.md
