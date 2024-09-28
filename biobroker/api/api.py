@@ -75,6 +75,8 @@ class GenericApi:
 
         :return: List of entities retrieved from the API. MUST always return a list for consistency.
         """
+        if not isinstance(accession, list):
+            accession = [accession]
         if len(accession) > 1:
             return self._retrieve_multiple(accession)
         return [self._retrieve(accession[0])]
@@ -310,6 +312,8 @@ class BsdApi(GenericApi):
         response = self.authenticator.get(query_url).json()
         len_sample_search = response['page']['totalElements']
         size = response['page']['size']
+        if not response.get('_embedded'):
+            return []
         samples = response['_embedded']['samples']
 
         progress_bar = ProgressBar(widgets=[FormatLabel('Retrieving samples: '),

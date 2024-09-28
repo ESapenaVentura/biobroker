@@ -55,7 +55,8 @@ extensions = [ 'sphinx.ext.autodoc',
                'sphinx_toolbox.decorators',
                'sphinx.ext.napoleon',
                'sphinxcontrib.mermaid',
-               'myst_parser'
+               'myst_parser',
+               'nbsphinx'
                ]
 
 autosummary_generate = True

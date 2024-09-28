@@ -11,3 +11,5 @@
   - Add method `remove_structured_data`
   - Add method `get_structured_data`
   - Add method `get_structured_data_by_type`
+- Additional errors needed:
+  - Requests that get a 400 (e.g. Trying to update samples not owned by the user)

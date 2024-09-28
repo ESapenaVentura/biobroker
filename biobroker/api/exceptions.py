@@ -11,7 +11,7 @@ def parse_checklist_validation_errors(validation_errors: list[dict]):
     :param validation_errors: Response list with validation error dictionaries, containing `dataPath` and `errors`.
     :return: printable string.
     """
-    validation_errors_str = "\n\t- ".join([f"{validation_errors[i]['dataPath']}: "
+    validation_errors_str = "\n\t- ".join([f"{validation_errors[i]['dataPath'].replace('/characteristics.', '')}: "
                                            f"{','.join(validation_errors[i]['errors'])}"
                                            for i in range(len(validation_errors))])
     return validation_errors_str
