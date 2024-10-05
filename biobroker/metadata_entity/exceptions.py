@@ -33,3 +33,9 @@ class RelationshipInvalidTargetError(Exception):
                         "used")
         logger.error(self.message)
         super().__init__(self.message)
+
+class NoOrganismSetError(Exception):
+    def __init__(self, logger: logging.Logger, sample_id: str):
+        self.message = f"Property 'organism' (Or any variant) needs to be set-up for the sample '{sample_id}'"
+        logger.error(self.message)
+        super().__init__(self.message)

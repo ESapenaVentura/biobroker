@@ -6,7 +6,7 @@ from dateutil import parser
 from typing import Any
 
 from biobroker.metadata_entity.exceptions import NoNameSetError, NameShouldBeStringError, RelationshipInvalidSourceError, \
-    RelationshipInvalidTargetError
+    RelationshipInvalidTargetError, NoOrganismSetError
 from biobroker.generic.exceptions import MandatoryFunctionNotSet
 from biobroker.generic.logger import set_up_logger
 
@@ -184,6 +184,7 @@ class Biosample(GenericEntity):
         """
         self._check_name()
         self._check_release_date()
+        self._check_organism()
 
     def flatten(self) -> dict:
         """
@@ -314,6 +315,15 @@ class Biosample(GenericEntity):
             self['release'] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
         else:
             self['release'] = parser.isoparse(self['release']).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
+    def _check_organism(self):
+        """
+        Check that the organism is set.
+
+        :raises:`~biobroker.metadata_entity.exceptions.NoOrganismSetError`
+        """
+        if not any([organism_property in self for organism_property in ('organism', 'Organism', 'species', 'Species')]):
+            raise NoOrganismSetError
 
 
     def add_relationship(self, source, target, relationship):
