@@ -135,3 +135,5 @@ Regarding new entities:
     - If it's just used by the entity internally (e.g. `metadata_entity` calling a function to process certain data), make
       it private.
 - Add the new subclass under the '__init__.py' document, both in `__all__` and as an import
+
+Check readme is imported
