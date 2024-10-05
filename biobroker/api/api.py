@@ -1,4 +1,5 @@
 import os
+
 import requests
 
 from os.path import join
@@ -288,8 +289,10 @@ class BsdApi(GenericApi):
             for relationship_type in self.relationship_types:
                 if relationship_type in entity:
                     for split_relationship_value in entity[relationship_type]['text'].split(entity.delimiter):
+                        target = split_relationship_value if Biosample.check_accession(split_relationship_value) \
+                            else id_to_accession[split_relationship_value]
                         entity.add_relationship(source=entity.accession,
-                                                target=id_to_accession[split_relationship_value],
+                                                target=target,
                                                 relationship=relationship_type)
                     del entity[relationship_type]
         updated_entities = self.update(entities)
