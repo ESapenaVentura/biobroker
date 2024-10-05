@@ -2,7 +2,6 @@
     - Improve on submit error reporting
         - Current known bug for BSDAPI: submit_multiple currently batches submit requests. If first batch succeeds but second
           fails, it will submit the first batch and error out, returning naaaaaathing.
-- Create examples - Via python notebooks
 - Create pytests
 - Create a `viewer`
     - Simple interface, loads filled out metadata entities

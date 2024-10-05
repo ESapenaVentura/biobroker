@@ -7,7 +7,7 @@ on:
 
 jobs:
   create-RTD:
-    name: Update the ReadTheDocs documentation if README has been modified
+    name: Update the ReadTheDocs documentation if README or notebooks have been modified
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -23,6 +23,9 @@ jobs:
         run: |
           cp README.md docs/README.md
           sed -i 's/`mermaid/`\{mermaid\}/g' docs/README.md
+      - name: copy notebooks
+        run: |
+          cp -r examples/notebooks docs/notebooks
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Updating docs"

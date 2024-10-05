@@ -2,6 +2,7 @@ import datetime
 import json
 import re
 
+from dateutil import parser
 from typing import Any
 
 from biobroker.metadata_entity.exceptions import NoNameSetError, NameShouldBeStringError, RelationshipInvalidSourceError, \
@@ -135,9 +136,10 @@ class Biosample(GenericEntity):
     """
     ROOT_PROPERTIES = ['name', 'release', 'relationships', 'accession', 'sraAccession', 'webinSubmissionAccountId',
                        'status', 'update', 'characteristics', 'submittedVia', 'create', '_links', 'submitted', 'taxId',
-                       'organization']
+                       'organization', 'structuredData', 'externalReferences']
     VALID_TAGS = ['text', 'ontologyTerms', 'unit']
     VALID_RELATIONSHIPS = ["derived_from", "same_as"]
+    EXTERNAL_REFERENCE_FIELD = "url"
     def __init__(self, metadata_content: dict, delimiter: str = "||", verbose: bool = False):
         self.delimiter = delimiter
         super().__init__(metadata_content, verbose)
@@ -258,10 +260,13 @@ class Biosample(GenericEntity):
         if key in Biosample.ROOT_PROPERTIES:
             self.entity[key] = value
         # Relationships
-        elif key in Biosample.VALID_RELATIONSHIPS and self.check_accession(value):
+        elif self.accession and key in Biosample.VALID_RELATIONSHIPS and self.check_accession(value):
             self.add_relationship(source=self.accession,
                                   target=value,
                                   relationship=key)
+        # External references
+        elif key == Biosample.EXTERNAL_REFERENCE_FIELD:
+            self.add_external_reference(value)
         # characteristics
         else:
             characteristic = {}
@@ -301,11 +306,15 @@ class Biosample(GenericEntity):
 
     def _check_release_date(self):
         """
-        Check the release date is set. If not, default the release to today. It's a small price to pay.
+        Check the release date is set. If not, default the release to today. It's a small price to pay. If set, force
+        format.
         """
         if 'release' not in self:
             self.logger.warning(f"Sample {self.id}: release date was not set. Setting it to right now.")
             self['release'] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+        else:
+            self['release'] = parser.isoparse(self['release']).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+
 
     def add_relationship(self, source, target, relationship):
         """
@@ -328,6 +337,16 @@ class Biosample(GenericEntity):
             "target": target,
             "type": relationship
         })
+
+    def add_external_reference(self, url: str):
+        """
+        Add an external reference to the entity.
+
+        :param url: URL to the external reference
+        """
+        if 'externalReference' not in self.entity:
+            self.entity['externalReference'] = []
+        self.entity['externalReference'].append({'url': url})
 
     @staticmethod
     def check_accession(accession) -> bool:
