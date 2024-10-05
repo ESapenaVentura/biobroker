@@ -6,7 +6,7 @@ build-backend = "hatchling.build"
 requires-python = ">= 3.10"
 name = "biobroker"
 description = "A package to easily broker data and metadata to repositories."
-version = "0.0.4"
+version = "0.0.5"
 authors = [
   {name = "Enrique Sapena Ventura", email = "sapenaventura@gmail.com"},
 ]
