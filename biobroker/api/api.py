@@ -374,7 +374,7 @@ class BsdApi(GenericApi):
             raise StructuredDataError(logger=self.logger, errors=errors)
 
         if not all([mandatory_key in structured_data for mandatory_key in ("data", "accession")]):
-            errors.append(f"Structured data MUST contain 'data' and 'accession' in root")
+            errors.append("Structured data MUST contain 'data' and 'accession' in root")
         if not Biosample.check_accession(structured_data['accession']):
             errors.append("Structured data MUST point to a valid accession")
 
