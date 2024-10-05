@@ -222,3 +222,7 @@ cython_debug/
 examples/**/*.txt
 examples/**/*.tsv
 examples/**/*.xlsx
+
+docs/notebooks/**/*.txt
+docs/notebooks/**/*.tsv
+docs/notebooks/**/*.xlsx
