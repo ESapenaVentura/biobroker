@@ -30,7 +30,7 @@ jobs:
           sed -i 's/`mermaid/`\{mermaid\}/g' docs/README.md
       - name: copy notebooks
         run: |
-          cp -r examples/notebooks docs/notebooks
+          cp -r examples/notebooks docs/
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "Updating docs"
