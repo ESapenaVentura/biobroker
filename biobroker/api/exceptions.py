@@ -1,5 +1,6 @@
 import logging
 import json
+from requests import Response
 
 from json.decoder import JSONDecodeError
 
@@ -11,7 +12,7 @@ def parse_checklist_validation_errors(validation_errors: list[dict]):
     :param validation_errors: Response list with validation error dictionaries, containing `dataPath` and `errors`.
     :return: printable string.
     """
-    validation_errors_str = "\n\t- ".join([f"{validation_errors[i]['dataPath'].replace('/characteristics.', '')}: "
+    validation_errors_str = "\n\t- ".join([f"{validation_errors[i]['dataPath'].replace('/characteristics/', '')}: "
                                            f"{','.join(validation_errors[i]['errors'])}"
                                            for i in range(len(validation_errors))])
     return validation_errors_str
@@ -31,7 +32,7 @@ class AccessionHasIncorrectFormat(Exception):
 
 
 class CantBeUpdatedApiError(Exception):
-    def __init__(self, sample_id, response, logger: logging.Logger):
+    def __init__(self, sample_id, response: Response, logger: logging.Logger):
         """
         Raise when an error comes from an API update request.
 
@@ -42,6 +43,9 @@ class CantBeUpdatedApiError(Exception):
         try:
             message = f"Sample with ID {sample_id} can't be updated:\n\t-Error type: {response.json()['error']}" \
                       f"\n\t-Error message: {response.json()['message']}"
+        except TypeError:
+            # Can't be updated, but response does not contain "error" dataPath
+            message = f"Sample with ID {sample_id} can't be updated:\n\t- {parse_checklist_validation_errors(response.json())}"
         except JSONDecodeError:
             # Validation against checklist failed, returns a non-jsonable message
             validation_errors = json.loads(response.text.split('failed: ')[2])
@@ -72,12 +76,27 @@ class BiosamplesValidationError(Exception):
         Raise a Biosamples minimal checklist validation error
         (https://www.ebi.ac.uk/biosamples/schemas/certification/biosamples-minimal.json)
 
-        :param error_list: list of errors returned from response.
+        :param response_text: text from the response.
         :param logger: subclass logger to log the error message to.
         """
         validation_errors = json.loads(response_text)
         errors_str = parse_checklist_validation_errors(validation_errors)
         self.message = f"Found following errors in sample validation:\n\t- {errors_str})"
+        logger.error(self.message)
+        super().__init__(self.message)
+
+
+class BiosamplesNoErrorMessageError(Exception):
+    def __init__(self, status_code: int, logger: logging.Logger):
+        """
+        Raise an error without any other issue but a 400 in the response and no text whatsoever.
+        Current testing (Completely empirical) has told me that this can be raised in the following situations:
+            - `release` in incorrect format
+
+        :param logger: subclass logger to log the error message to.
+        """
+        self.message = (f"It's dangerous to go alone, take this error code: '{status_code}' with you (There was no "
+                        f"error message))")
         logger.error(self.message)
         super().__init__(self.message)
 
@@ -96,5 +115,22 @@ class ChecklistValidationError(Exception):
         validation_errors = json.loads(response_text.split('failed: ')[2])
         validation_errors_str = parse_checklist_validation_errors(validation_errors)
         self.message = f"Samples failed checklist validation with the following errors: \n\t- {validation_errors_str}"
+        logger.error(self.message)
+        super().__init__(self.message)
+
+
+class StructuredDataError(Exception):
+    def __init__(self, logger: logging.Logger, errors: list[str]):
+        delimiter = "\n\t- "
+        self.message = (f"Structured data submission failed due to the following error(s):"
+                        f"{delimiter}{delimiter.join(errors)}\n Please see "
+                        f"https://www.ebi.ac.uk/biosamples/docs/references/api/submit#_submit_structured_data for more "
+                        f"information")
+        logger.error(self.message)
+        super().__init__(self.message)
+
+class StructuredDataSubmissionError(Exception):
+    def __init__(self, logger: logging.Logger, response: Response):
+        self.message = f"Error submitting structured data: {response.text}"
         logger.error(self.message)
         super().__init__(self.message)

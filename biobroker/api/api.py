@@ -7,7 +7,7 @@ from requests.utils import requote_uri
 from progressbar import progressbar, AdaptiveETA, Percentage, FormatLabel, AnimatedMarker, Counter, ProgressBar
 
 from biobroker.api.exceptions import CantBeUpdatedApiError, CantBeUpdatedLocalError, ChecklistValidationError, \
-    BiosamplesValidationError
+    BiosamplesValidationError, BiosamplesNoErrorMessageError, StructuredDataError, StructuredDataSubmissionError
 from biobroker.metadata_entity import Biosample
 from biobroker.metadata_entity import GenericEntity
 from biobroker.authenticator import GenericAuthenticator
@@ -149,6 +149,7 @@ class BsdApi(GenericApi):
         self.bulk_accession_endpoint = join(self.base_uri.replace("biosamples/", "biosamples/v2/"), 'bulk-accession')
         self.bulk_submit_endpoint = join(self.base_uri.replace("biosamples/", "biosamples/v2/"), 'bulk-submit')
         self.validate_endpoint = join(self.base_uri, 'validate')
+        self.structured_data_endpoint = self.base_uri.replace('/samples', '/structureddata')
         self.logger.info(f"Set up BSD API successfully: using base uri '{self.base_uri}'")
         self.relationship_types = ["derived_from", "same_as"]
 
@@ -332,6 +333,71 @@ class BsdApi(GenericApi):
 
         return [Biosample(sample) for sample in samples]
 
+    def submit_structured_data(self, structured_data: dict) -> Biosample:
+        """
+        Submit structured data to a sample in BioSamples. The data is checked before submission. May raise:
+        - :exc:`~biobroker.api.exceptions.StructuredDataError`: Pre-submission errors
+        - :exc:`~biobroker.api.exceptions.StructuredDataSubmissionError`: Post-submission errors
+
+        :param structured_data: Structured data that's going to be posted in BSD. Must follow the format in https://www.ebi.ac.uk/biosamples/docs/references/api/submit#_submit_structured_data
+        :return: Biosample entity with the structured data
+        """
+        self._check_structured_data(structured_data=structured_data)
+        structured_data_put_uri = join(self.structured_data_endpoint, structured_data['accession'])
+        response = self.authenticator.put(url=structured_data_put_uri, payload=structured_data)
+        if response.status_code == 200:
+            return Biosample(response.json())
+        raise StructuredDataSubmissionError(self.logger, response)
+
+
+    def _check_structured_data(self, structured_data: dict):
+        """
+        Check the structured data provided. The method tests for the following:
+            - Structured data is provided as a dictionary
+            - Structured data contains the minimum keys necessary (`type`, `content`, `accession`)
+            - Accession provided is in the proper format (:func:`~biobroker.metadata_entity.metadata_entity.Biosample.check_accession`)
+            - `data` is not empty
+            - `data` is provided in the proper format (list of dictionaries)
+            - `data` contains all the mandatory root keys (`webinSubmissionAccountId`, `type`, `content`)
+            - `content` is a list of dictionaries
+            - Within `content`, all dictionaries MUST have a "value" property
+        Apologies in advance for all the nesting in the method; the data itself is very nested and every level has a
+        set of different rules it needs to abide to. I thought about recursion and match-case but... not really demure.
+        Any suggestions appreciated!
+
+        :param structured_data: Structured data.
+        :raises: :exc:`~biobroker.api.exceptions.StructuredDataError`
+        """
+        errors = []
+        if not isinstance(structured_data, dict):
+            errors.append("Structured data MUST be provided as a dictionary")
+            raise StructuredDataError(logger=self.logger, errors=errors)
+
+        if not all([mandatory_key in structured_data for mandatory_key in ("data", "accession")]):
+            errors.append(f"Structured data MUST contain 'data' and 'accession' in root")
+        if not Biosample.check_accession(structured_data['accession']):
+            errors.append("Structured data MUST point to a valid accession")
+
+        if not structured_data.get('data'):
+            errors.append("Structured data `data` attribute MUST NOT be empty")
+        for entry_number, data_entry in enumerate(structured_data.get('data', [])):
+            if not isinstance(data_entry, dict):
+                errors.append(f"Data entry number {entry_number} must be a dictionary")
+                continue
+            if not all([mandatory_key in data_entry for mandatory_key in ("webinSubmissionAccountId", "type")]):
+                errors.append(f"Data entry number {entry_number} missing one or more of mandatory properties: 'webinSubmissionAccountId', 'type'")
+            if not data_entry.get('content'):
+                errors.append(f"Data entry number {entry_number} has missing or empty 'content'")
+                continue
+            if not all([isinstance(content_entry, dict) for content_entry in data_entry['content']]):
+                errors.append(f"Data entry number {entry_number}: `content` is not a list of dictionaries for all entries")
+            for content_entry in data_entry['content']:
+                if not all("value" in content_entry_value for content_entry_value in content_entry.values()):
+                    errors.append(f"Data entry number {entry_number}: `content` values MUST be specified with key `value`")
+
+        if errors:
+            raise StructuredDataError(logger=self.logger, errors=errors)
+
     def _submit_errors(self, response: requests.Response) -> None:
         """
         Submission errors and how they should be handled. Biosamples returns non-jsonable responses sometimes so this
@@ -347,8 +413,11 @@ class BsdApi(GenericApi):
         if "Checklist validation failed" in response.text:
             raise ChecklistValidationError(response.text, self.logger)
 
-        if response.status_code == 400 and "dataPath" in response.text:
-            raise BiosamplesValidationError(response.text, self.logger)
+        if response.status_code == 400:
+            if "dataPath" in response.text:
+                raise BiosamplesValidationError(response.text, self.logger)
+            else:
+                raise BiosamplesNoErrorMessageError(response.status_code, self.logger)
 
         return None
 
