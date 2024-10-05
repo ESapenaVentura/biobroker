@@ -9,8 +9,12 @@ jobs:
   create-RTD:
     name: Update the ReadTheDocs documentation if README or notebooks have been modified
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.head_ref }}
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
