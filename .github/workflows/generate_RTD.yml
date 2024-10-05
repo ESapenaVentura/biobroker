@@ -4,6 +4,7 @@ on:
   push:
     paths:
       - README.md
+      - examples/notebooks/*/**.ipynb
 
 jobs:
   create-RTD:
