@@ -261,13 +261,16 @@ class Biosample(GenericEntity):
         if key in Biosample.ROOT_PROPERTIES:
             self.entity[key] = value
         # Relationships
-        elif self.accession and key in Biosample.VALID_RELATIONSHIPS and self.check_accession(value):
-            self.add_relationship(source=self.accession,
-                                  target=value,
-                                  relationship=key)
+        elif self.accession and key in Biosample.VALID_RELATIONSHIPS and all([
+            self.check_accession(accession) for accession in value.split(self.delimiter)]):
+            for target in value.split(self.delimiter):
+                self.add_relationship(source=self.accession,
+                                      target=target,
+                                      relationship=key)
         # External references
         elif key == Biosample.EXTERNAL_REFERENCE_FIELD:
-            self.add_external_reference(value)
+            for url in value.split(self.delimiter):
+                self.add_external_reference(url=url)
         # characteristics
         else:
             characteristic = {}
@@ -323,7 +326,7 @@ class Biosample(GenericEntity):
         :raises:`~biobroker.metadata_entity.exceptions.NoOrganismSetError`
         """
         if not any([organism_property in self for organism_property in ('organism', 'Organism', 'species', 'Species')]):
-            raise NoOrganismSetError
+            raise NoOrganismSetError(logger=self.logger, sample_id=self.id)
 
 
     def add_relationship(self, source, target, relationship):
