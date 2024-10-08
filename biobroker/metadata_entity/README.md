@@ -22,3 +22,4 @@ BsdApi:
   a batch submission, but that may make the process way slower. Need to test speed for that.
 - Add the missing relationship types, don't be lazy
 - Add a way to delete the samples (empty put, basically)
+- **KNOWN BUG**: Multiple relationships may not be added correctly with '__setitem__'
