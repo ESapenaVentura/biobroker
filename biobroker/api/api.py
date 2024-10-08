@@ -336,7 +336,7 @@ class BsdApi(GenericApi):
 
         return [Biosample(sample) for sample in samples]
 
-    def submit_structured_data(self, structured_data: dict) -> Biosample:
+    def submit_structured_data(self, structured_data: dict) -> list[Biosample]:
         """
         Submit structured data to a sample in BioSamples. The data is checked before submission. May raise:
         - :exc:`~biobroker.api.exceptions.StructuredDataError`: Pre-submission errors
@@ -349,7 +349,7 @@ class BsdApi(GenericApi):
         structured_data_put_uri = join(self.structured_data_endpoint, structured_data['accession'])
         response = self.authenticator.put(url=structured_data_put_uri, payload=structured_data)
         if response.status_code == 200:
-            return Biosample(response.json())
+            return self.retrieve([structured_data['accession']])
         raise StructuredDataSubmissionError(self.logger, response)
 
 
