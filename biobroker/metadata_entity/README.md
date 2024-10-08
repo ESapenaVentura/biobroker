@@ -23,3 +23,4 @@ BsdApi:
 - Add the missing relationship types, don't be lazy
 - Add a way to delete the samples (empty put, basically)
 - **KNOWN BUG**: Multiple relationships may not be added correctly with '__setitem__'
+- **KNOWN BUG**: The order of the factors does alter the product. Accession needs to be set-up first in order for some of the '__setitem__' checks to go through correctly. Whoopsie.
