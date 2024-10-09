@@ -282,7 +282,8 @@ class Biosample(GenericEntity):
                     self.logger.warning(f"Tag '{tag_name}' on property '{key}' is not a documented valid tag. "
                                         "It may be rejected on submission.")
                 characteristic = self.entity['characteristics'].get(key, [{}])[0]
-                characteristic[tag_name] = value
+                # Kinda hate to have soooo many ifs, but every field has its own rules...
+                characteristic[tag_name] = value if tag_name != 'ontologyTerms' else value.split(self.delimiter)
             else:
                 characteristic['text'] = value
 
