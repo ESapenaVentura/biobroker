@@ -16,3 +16,5 @@ xlrd==2.0.1
 progressbar2==4.4.2
 unit_parse
 urllib3
+
+pytest
