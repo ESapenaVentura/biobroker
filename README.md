@@ -1,4 +1,5 @@
-[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) [![PyPI](https://img.shields.io/pypi/v/biobroker.svg)](https://pypi.org/project/biobroker/) [![Documentation Status](https://readthedocs.org/projects/biobroker/badge/?version=latest)](https://biobroker.readthedocs.io/en/latest/?badge=latest)
+
 
 # Biobroker
 
