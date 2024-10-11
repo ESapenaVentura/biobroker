@@ -462,3 +462,117 @@ BIOSAMPLES_GUIDELINES = "A Biosamples entity MUST have the following properties 
                         "To indicate relationships in the samples, please use a field named after the relationship" \
                         "itself: namely, 'derived_from', 'same_as', 'has_member' or 'child_of'.\nPlease see" \
                         "https://www.ebi.ac.uk/biosamples/docs/guides/relationships"
+
+
+class EnaSubmission(GenericEntity):
+    def __init__(self, metadata_content: dict, delimiter: str = "||", verbose: bool = False):
+        STUDY_PROPERTIES = ["alias", "title", "study_type", "study_abstract"]
+        EXPERIMENT_PROPERTIES = []
+
+        self.delimiter = delimiter
+        super().__init__(metadata_content, verbose)
+
+    @property
+    def id(self):
+        """
+        Return the 'id' property, extracting it from the project alias. Defaults to empty
+        """
+        return self.entity.get('project', [{}])[0].get('alias', '')
+
+    @property
+    def accession(self) -> str:
+        """
+        Return the property 'accesssion', extracting it from the study 'accession' property. Defaults to an emtpy string
+
+        :return:
+        """
+        return self.entity.get('study', [{}]).get('accession', '')
+
+    @GenericEntity.entity.setter
+    def entity(self, metadata: dict): # TODO
+        """
+        Setter for the 'entity' property. Sets up a new sample, with the basic 'name' and 'characteristics' properties.
+
+        :param metadata: non-nested dictionary containing the metadata for the sample.
+        """
+        self._entity = {"name": "", "characteristics": {}}
+        for field, value in metadata.items():
+            if not value:
+                continue
+            self[field] = value
+
+    def validate(self): # TODO
+        """
+        Validate the content of the '.entity'. Currently calls the following functions:
+
+        - :func:`_check_name`
+        - :func:`_check_release_date`
+        """
+        self._check_name()
+        self._check_release_date()
+        self._check_organism()
+
+    def flatten(self) -> dict: # TODO
+        """
+        Flatten the :attr:`~Biosample.entity` property and return a non-nested dictionary. This will be mostly used for
+        output generation.
+
+        :return: flattened dictionary
+        """
+        sample_json = self.to_json()
+        flattened_json = {}
+        for key, value in sample_json.items():
+            match key:
+                case 'relationships':
+                    # Relationships are flattened using just the relationship type. Keep it user friendly!
+                    flattened_json = self._flatten_relationships(flattened_json, value)
+                case 'characteristics':
+                    flattened_json = self._flatten_characteristics(flattened_json, sample_json[key])
+                case '_links':
+                    # No need to flatten the _links. _links are not useful in output generation.
+                    pass
+                case 'externalReferences':
+                    flattened_json = self._flatten_urls(flattened_json, sample_json[key])
+                case _:
+                    flattened_json[key] = value
+        return flattened_json
+
+    def __getitem__(self, item) -> str | int | dict: # TODO
+        """
+        Special method to get values from the Biosample.entity. Tries to obtain it from root and then characteristics;
+        raises ValueError if not found.
+
+        :param item: Value of the key to look up for
+
+        :return: Value of the item if found.
+        """
+        return self.entity.get('characteristics', {}).get(item, [{}])[0] or self.entity.get(item)
+
+    def __delitem__(self, key: str): # TODO
+        """
+        Special method to delete the values from the Biosample.entity.
+
+        :param key: Key to search for for deletion
+        :return:
+        """
+        if key in self.entity.get('characteristics', {}):
+            del self.entity['characteristics'][key]
+        else:
+            del self.entity[key]
+
+    def __setitem__(self, key: str, value: Any):
+        """
+
+
+        :param key: name of the attribute.
+        :param value: value of the attribute.
+        """
+
+
+    def __contains__(self, item: str) -> bool:
+        """
+        Special method to check if Biosample.entity  contains 'item'.
+        :param item: value of the key to check for.
+        :return: True if found, False if not found.
+        """
+        return item in self.entity or item in self.entity.get('characteristics')
