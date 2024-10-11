@@ -205,6 +205,8 @@ class Biosample(GenericEntity):
                 case '_links':
                     # No need to flatten the _links. _links are not useful in output generation.
                     pass
+                case 'externalReferences':
+                    flattened_json = self._flatten_urls(flattened_json, sample_json[key])
                 case _:
                     flattened_json[key] = value
         return flattened_json
@@ -413,6 +415,19 @@ class Biosample(GenericEntity):
                         # Returning units and ontologyTerm's to their natural habitat
                         flattened_json[f"{field_name}{self.delimiter}{tag}"] = value
             flattened_json[field_name] = "||".join([f"{v['text']}" for v in values])
+        return flattened_json
+
+    def _flatten_urls(self, flattened_json: dict, urls: dict):
+        """
+        Flatten the externalReferences.
+
+        :param flattened_json: Flattened dictionary in progress.
+        :param urls: dictionary with the urls.
+
+        :return: flattened dictionary with the processed urls incorporated.
+
+        """
+        flattened_json['url'] = self.delimiter.join([value['url'] for value in urls])
         return flattened_json
 
     @staticmethod
