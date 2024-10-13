@@ -6,6 +6,10 @@ Generic
    :undoc-members:
    :show-inheritance:
 
+Pydantic models
+---------------
+.. automodule:: biobroker.generic.pydantic_model
+    :members: StructuredDataModel,BiosampleGeneralModel
 
 Exceptions
 ----------
