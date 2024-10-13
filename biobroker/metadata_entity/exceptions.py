@@ -1,5 +1,13 @@
 import logging
+from biobroker.generic.utilities import parse_pydantic_errors
 
+class EntityValidationError(Exception):
+    def __init__(self, logger: logging.Logger, entity_id: str, errors: list[dict]):
+        delimiter = "\n\t- "
+        self.message = (f"Metadata content has failed validation for '{entity_id}':"
+                        f"{delimiter}{delimiter.join(parse_pydantic_errors(errors))}")
+        logger.error(self.message)
+        super().__init__(self.message)
 
 class NoNameSetError(Exception):
     """Name has not been set in the sample"""
