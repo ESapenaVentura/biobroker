@@ -15,6 +15,10 @@ from biobroker.authenticator import GenericAuthenticator
 from biobroker.generic.exceptions import MandatoryFunctionNotSet
 from biobroker.generic.logger import set_up_logger
 from biobroker.generic.utilities import slice_list
+from biobroker.generic.pydantic_model import StructuredDataModel
+
+import pydantic_core
+
 
 ## TODO: BsdApi Build self url. Self points to general biosamples...
 
@@ -355,51 +359,16 @@ class BsdApi(GenericApi):
 
     def _check_structured_data(self, structured_data: dict):
         """
-        Check the structured data provided. The method tests for the following:
-            - Structured data is provided as a dictionary
-            - Structured data contains the minimum keys necessary (`type`, `content`, `accession`)
-            - Accession provided is in the proper format (:func:`~biobroker.metadata_entity.metadata_entity.Biosample.check_accession`)
-            - `data` is not empty
-            - `data` is provided in the proper format (list of dictionaries)
-            - `data` contains all the mandatory root keys (`webinSubmissionAccountId`, `type`, `content`)
-            - `content` is a list of dictionaries
-            - Within `content`, all dictionaries MUST have a "value" property
-        Apologies in advance for all the nesting in the method; the data itself is very nested and every level has a
-        set of different rules it needs to abide to. I thought about recursion and match-case but... not really demure.
-        Any suggestions appreciated!
+        Check the structured data is correct using the data models and pydantic.
+        Model used: :cls:`~biobroker.metadata_entity.data_model.StructuredDataModel`
 
         :param structured_data: Structured data.
         :raises: :exc:`~biobroker.api.exceptions.StructuredDataError`
         """
-        errors = []
-        if not isinstance(structured_data, dict):
-            errors.append("Structured data MUST be provided as a dictionary")
-            raise StructuredDataError(logger=self.logger, errors=errors)
-
-        if not all([mandatory_key in structured_data for mandatory_key in ("data", "accession")]):
-            errors.append("Structured data MUST contain 'data' and 'accession' in root")
-        if not Biosample.check_accession(structured_data['accession']):
-            errors.append("Structured data MUST point to a valid accession")
-
-        if not structured_data.get('data'):
-            errors.append("Structured data `data` attribute MUST NOT be empty")
-        for entry_number, data_entry in enumerate(structured_data.get('data', [])):
-            if not isinstance(data_entry, dict):
-                errors.append(f"Data entry number {entry_number} must be a dictionary")
-                continue
-            if not all([mandatory_key in data_entry for mandatory_key in ("webinSubmissionAccountId", "type")]):
-                errors.append(f"Data entry number {entry_number} missing one or more of mandatory properties: 'webinSubmissionAccountId', 'type'")
-            if not data_entry.get('content'):
-                errors.append(f"Data entry number {entry_number} has missing or empty 'content'")
-                continue
-            if not all([isinstance(content_entry, dict) for content_entry in data_entry['content']]):
-                errors.append(f"Data entry number {entry_number}: `content` is not a list of dictionaries for all entries")
-            for content_entry in data_entry['content']:
-                if not all("value" in content_entry_value for content_entry_value in content_entry.values()):
-                    errors.append(f"Data entry number {entry_number}: `content` values MUST be specified with key `value`")
-
-        if errors:
-            raise StructuredDataError(logger=self.logger, errors=errors)
+        try:
+            StructuredDataModel.model_validate(structured_data)
+        except pydantic_core.ValidationError as pydantic_error:
+            raise StructuredDataError(logger=self.logger, errors=pydantic_error.errors())
 
     def _submit_errors(self, response: requests.Response) -> None:
         """
