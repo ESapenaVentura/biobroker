@@ -3,7 +3,7 @@ from enum import Enum
 from dateutil import parser
 from typing import Dict, Optional
 
-from pydantic import BaseModel, Field, AnyHttpUrl, field_validator, ConfigDict, Json
+from pydantic import BaseModel, Field, field_validator, ConfigDict
 
 """
 FIELDS/SUPPORTING MODELS
