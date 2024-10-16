@@ -1,22 +1,37 @@
+import datetime
 from enum import Enum
 from dateutil import parser
-from typing import Dict, Optional, Union
+from typing import Dict, Optional
 
-from pydantic import BaseModel, Field, AnyHttpUrl, field_validator, AliasChoices, ConfigDict, RootModel
+from pydantic import BaseModel, Field, AnyHttpUrl, field_validator, ConfigDict, Json
 
 """
-Data models used to validate metadata entities.
+FIELDS/SUPPORTING MODELS
+------------------------
 """
-
-class OntologyTerm(BaseModel):
-    ontologyTerm: AnyHttpUrl
 
 
 class CharacteristicsFields(BaseModel):
     model_config = ConfigDict(extra='forbid')
-    text: str
+    text: str | datetime.datetime | int | float
     unit: Optional[str] = None
-    ontologyTerms: Optional[list[OntologyTerm]] = None
+    ontologyTerms: Optional[list[str]] = None
+    tag : Optional[str] = None
+
+    @field_validator('text')
+    @classmethod
+    def proper_formats(cls, value):
+        """
+        Evaluate if an input is a date/int/float and give it a proper formatting, returning it as str
+        """
+        if isinstance(value, datetime.datetime):
+            value = value.strftime("%Y-%m-%dT%H:%M:%SZ")
+            if value.endswith('T00:00:00Z'):
+                value = value.replace('T00:00:00Z', '')
+            return value
+        elif isinstance(value, float):
+            return str(int(value)) if value.is_integer() else str(value)
+        return str(value)
 
 class DataContent(BaseModel):
     value: str
@@ -25,13 +40,6 @@ class DataEntry(BaseModel):
     webinSubmissionAccountId: str = Field(pattern="Webin-[0-9]+$")
     type: str
     content: list[Dict[str, DataContent]]
-
-class StructuredDataModel(BaseModel):
-    """
-    Biosamples' structured data model
-    """
-    accession: str = Field(pattern="^SAME.[0-9]+$")
-    data: list[DataEntry]
 
 class RelationshipType(str, Enum):
     derived_from = "derived_from"
@@ -45,6 +53,24 @@ class Relationship(BaseModel):
     source: str = Field(pattern="^SAMEA[0-9]+$")
     type: RelationshipType
 
+class Organization(BaseModel):
+    Name: str
+
+class ExternalUrl(BaseModel):
+    url: str = Field(pattern="https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}([-a-zA-Z0-9()@:%_\+.~#?&\/=]*)")
+    doi: Optional[str] = None
+
+"""
+DATA MODELS
+-----------
+"""
+
+class StructuredDataModel(BaseModel):
+    """
+    Biosamples' structured data model
+    """
+    accession: str = Field(pattern="^SAME.[0-9]+$")
+    data: list[DataEntry]
 
 class BiosampleGeneralModel(BaseModel):
     """
@@ -56,8 +82,9 @@ class BiosampleGeneralModel(BaseModel):
     release: str
     characteristics: Dict[str, list[CharacteristicsFields]]
     relationships: Optional[list[Relationship]] = None
-    organization: Optional[list[Dict]] = None
+    organization: Optional[list[Organization]] = None
     structuredData: Optional[StructuredDataModel] = None
+    externalReferences: Optional[list[ExternalUrl]] = None
 
     @field_validator('release')
     @classmethod
