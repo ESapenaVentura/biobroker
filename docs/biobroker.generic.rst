@@ -9,7 +9,7 @@ Generic
 Pydantic models
 ---------------
 .. automodule:: biobroker.generic.pydantic_model
-    :members: StructuredDataModel,BiosampleGeneralModel
+    :members: StructuredDataModel, BiosampleGeneralModel
 
 Exceptions
 ----------
