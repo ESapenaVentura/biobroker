@@ -222,7 +222,9 @@ cython_debug/
 examples/**/*.txt
 examples/**/*.tsv
 examples/**/*.xlsx
+examples/**/*.py
 
 docs/notebooks/**/*.txt
 docs/notebooks/**/*.tsv
 docs/notebooks/**/*.xlsx
+docs/notebooks/**/*.py

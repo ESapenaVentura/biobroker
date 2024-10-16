@@ -81,6 +81,8 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store', 'biobroker.rst']
 
 
 # -- Options for HTML output -------------------------------------------------
+myst_fence_as_directive = ["mermaid"] # No longer need to use brackets for mermaid
+
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.

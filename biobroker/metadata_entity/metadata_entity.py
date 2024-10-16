@@ -1,15 +1,16 @@
-import datetime
 import json
 import re
 
-from dateutil import parser
-from typing import Any
+import pydantic_core
+from typing import Any, Type
 
-from biobroker.metadata_entity.exceptions import NoNameSetError, NameShouldBeStringError, RelationshipInvalidSourceError, \
-    RelationshipInvalidTargetError, NoOrganismSetError
+from pydantic import BaseModel
+
+from biobroker.generic.pydantic_model import BiosampleGeneralModel
+from biobroker.metadata_entity.exceptions import (RelationshipInvalidSourceError, RelationshipInvalidTargetError,
+                                                  EntityValidationError)
 from biobroker.generic.exceptions import MandatoryFunctionNotSet
 from biobroker.generic.logger import set_up_logger
-
 
 # MONKEY PATCHING JSON ENCODER TO MAKE ENTITIES JSON SERIALIZABLE #
 def _default(self, obj):
@@ -25,12 +26,13 @@ class GenericEntity:
     Generic definition of metadata entity.
 
     :param metadata_content: dictionary with the content of the entity
+    :patam data_model: BaseModel subclass determining the metadata model to validate the `metadata_content`.
     """
-    def __init__(self, metadata_content: dict, verbose: bool = False):
+    def __init__(self, metadata_content: dict, data_model: type[BaseModel], verbose: bool = False):
         self.logger = set_up_logger(self, verbose=verbose)
         self._entity = None
         self.entity = metadata_content
-        self.validate()
+        self.validate(data_model=data_model)
 
     @property
     def entity(self) -> dict:
@@ -69,11 +71,15 @@ class GenericEntity:
         """
         raise MandatoryFunctionNotSet(self.logger)
 
-    def validate(self):
+    def validate(self, data_model: Type[BaseModel]):
         """
-        Validate subclass of GenericEntity. Must be overriden by subclasses.
+        Validate the metadata content using a Pydantic data model. Each subclass can define its own data model, or it
+        can be provided by the user on validation.
         """
-        raise MandatoryFunctionNotSet(self.logger)
+        try:
+            self.entity = json.loads(data_model(**self.entity).model_dump_json(exclude_unset=True, by_alias=True))
+        except pydantic_core.ValidationError as pydantic_error:
+            raise EntityValidationError(self.logger, entity_id=self.id, errors=pydantic_error.errors()) from None
 
     def flatten(self):
         """
@@ -129,20 +135,23 @@ class Biosample(GenericEntity):
     is because... Biosamples also expects that! No clue why properties are defaulting to arrays.
 
     :param metadata_content: non-nested dictionary containing the metadata for the sample.
+    :param data_model: Optional parameter, used to evaluate the metadata content. Defaults to :cls:`~biobroker.generic.pydantic_model.BiosampleGeneralModel`
     :param delimiter: optional parameter, used for key delimiters. Used mainly to manage attributes tags, such as
-                      'unit' and 'ontologyTerm'. Explained further in
+                      'unit' and 'ontologyTerms'. Explained further in
                       :func:`~broker.metadata_entity.biosample.Biosample.__setitem__`, point 4.
     :param verbose: True if logger should be set to INFO. Default WARNING.
     """
     ROOT_PROPERTIES = ['name', 'release', 'relationships', 'accession', 'sraAccession', 'webinSubmissionAccountId',
                        'status', 'update', 'characteristics', 'submittedVia', 'create', '_links', 'submitted', 'taxId',
-                       'organization', 'structuredData', 'externalReferences']
-    VALID_TAGS = ['text', 'ontologyTerms', 'unit']
+                       'structuredData', 'externalReferences', 'organization']
+    VALID_TAGS = ['text', 'ontologyTerms', 'unit', 'tag']
     VALID_RELATIONSHIPS = ["derived_from", "same_as"]
     EXTERNAL_REFERENCE_FIELD = "url"
-    def __init__(self, metadata_content: dict, delimiter: str = "||", verbose: bool = False):
+    ORGANIZATION = "organizationName"
+    def __init__(self, metadata_content: dict, data_model: Type[BaseModel] = BiosampleGeneralModel,
+                 delimiter: str = "||", verbose: bool = False):
         self.delimiter = delimiter
-        super().__init__(metadata_content, verbose)
+        super().__init__(metadata_content, data_model=data_model, verbose=verbose)
 
     @property
     def id(self):
@@ -169,22 +178,11 @@ class Biosample(GenericEntity):
 
         :param metadata: non-nested dictionary containing the metadata for the sample.
         """
-        self._entity = {"name": "", "characteristics": {}}
+        self._entity = {"characteristics": {}}
         for field, value in metadata.items():
-            if not value:
+            if value is None:
                 continue
             self[field] = value
-
-    def validate(self):
-        """
-        Validate the content of the '.entity'. Currently calls the following functions:
-
-        - :func:`_check_name`
-        - :func:`_check_release_date`
-        """
-        self._check_name()
-        self._check_release_date()
-        self._check_organism()
 
     def flatten(self) -> dict:
         """
@@ -198,7 +196,7 @@ class Biosample(GenericEntity):
         for key, value in sample_json.items():
             match key:
                 case 'relationships':
-                    # Relationships are flattened using just the relationship type. Keep it user friendly!
+                    # Relationships are flattened using just the relationship type. Keep it user-friendly!
                     flattened_json = self._flatten_relationships(flattened_json, value)
                 case 'characteristics':
                     flattened_json = self._flatten_characteristics(flattened_json, sample_json[key])
@@ -225,39 +223,37 @@ class Biosample(GenericEntity):
     def __delitem__(self, key: str):
         """
         Special method to delete the values from the Biosample.entity.
+        You can delete tags by using delimiter e.g. temperature||unit
 
         :param key: Key to search for for deletion
         :return:
         """
-        if key in self.entity.get('characteristics', {}):
-            del self.entity['characteristics'][key]
-        else:
+        if key in Biosample.ROOT_PROPERTIES:
             del self.entity[key]
+        else:
+            keys = key.split(self.delimiter)
+            match len(keys):
+                case 1:
+                    del self.entity['characteristics'][keys[0]]
+                case 2:
+                    del self.entity['characteristics'][keys[0]][0][keys[1]]
+                case _:
+                    # In Biosamples, nesting is limited to 1 level
+                    raise KeyError(key)
 
     def __setitem__(self, key: str, value: Any):
         """
         This is a special method to set up values to "entity" in a dict-like manner. Each entity can decide to implement
         checks (Depending on the archive needs) or just return "self.entity[key] = value".
 
-        In the Biosamples case, I decided to add 4 checks:
-
-        - First, it evaluates if it's a datetime object. Datetime objects are not jsonable.
-        - Second, evaluate if the key is part of the :attr:`~Biosample.ROOT_PROPERTIES`. These are set as-is.
-        - Third, evaluate if it's a string. If so, evaluate if there are possible units in the string and log it to a
-          warning. I tried automatic conversion but that's a mistake - Let the user deal with it.
-        - Fourth, tags for the attributes can be set up from the flattened input dictionary. As such, each sample has
-          a delimiter set up, and if it's detected, instead of replacing the value, it will add the tag (e.g.
-          `{'size': 1, 'size||unit': 'cm'}` will be translated to `{'size': [{'text': 1, 'unit': cm}]}`). Please see
-          https://www.ebi.ac.uk/biosamples/docs/references/api/submit#_sample for more information.
+        Tags for the attributes can be set up from the flattened input dictionary. As such, each sample has
+        a delimiter set up, and if it's detected, instead of replacing the value, it will add the tag (e.g.
+        `{'size': 1, 'size||unit': 'cm'}` will be translated to `{'size': [{'text': 1, 'unit': cm}]}`). Please see
+        https://www.ebi.ac.uk/biosamples/docs/references/api/submit#_sample for more information.
 
         :param key: name of the attribute.
         :param value: value of the attribute.
         """
-        # Deal with datetimes - Specific to BioSamples. If anyone knows a cleaner way let me know please!
-        if isinstance(value, datetime.datetime):
-            value = value.strftime("%Y-%m-%dT%H:%M:%SZ")
-            if value.endswith('T00:00:00Z'):
-                value = value.replace('T00:00:00Z', '')
 
         # Root values
         if key in Biosample.ROOT_PROPERTIES:
@@ -273,9 +269,13 @@ class Biosample(GenericEntity):
         elif key == Biosample.EXTERNAL_REFERENCE_FIELD:
             for url in value.split(self.delimiter):
                 self.add_external_reference(url=url)
+        # Organizations - Since there is no documentation I will assume it only has a name
+        elif key == Biosample.ORGANIZATION:
+            for organization in value.split(self.delimiter):
+                self.add_organization(organization=organization)
         # characteristics
         else:
-            characteristic = {}
+            characteristic = self.entity.get('characteristics').get(key, [{}])[0]
             # Managing the elements of the attributes in characteristics. Check
             # https://www.ebi.ac.uk/biosamples/docs/references/api/submit#_sample
             if self.delimiter in key:
@@ -298,39 +298,6 @@ class Biosample(GenericEntity):
         :return: True if found, False if not found.
         """
         return item in self.entity or item in self.entity.get('characteristics')
-
-    def _check_name(self):
-        """
-        Check if the object contains a valid name and, if not, raise error. Current checks:
-
-        - Name is set
-        - Name is a string
-        """
-        if not self.id:
-            raise NoNameSetError(logger=self.logger, sample_id=self.id)
-        if not isinstance(self['name'], str):
-            raise NameShouldBeStringError(logger=self.logger, name=self.id)
-
-    def _check_release_date(self):
-        """
-        Check the release date is set. If not, default the release to today. It's a small price to pay. If set, force
-        format.
-        """
-        if 'release' not in self:
-            self.logger.warning(f"Sample {self.id}: release date was not set. Setting it to right now.")
-            self['release'] = datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-        else:
-            self['release'] = parser.isoparse(self['release']).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
-
-    def _check_organism(self):
-        """
-        Check that the organism is set.
-
-        :raises:`~biobroker.metadata_entity.exceptions.NoOrganismSetError`
-        """
-        if not any([organism_property in self for organism_property in ('organism', 'Organism', 'species', 'Species')]):
-            raise NoOrganismSetError(logger=self.logger, sample_id=self.id)
-
 
     def add_relationship(self, source, target, relationship):
         """
@@ -360,20 +327,14 @@ class Biosample(GenericEntity):
 
         :param url: URL to the external reference
         """
-        if 'externalReference' not in self.entity:
-            self.entity['externalReference'] = []
-        self.entity['externalReference'].append({'url': url})
+        if 'externalReferences' not in self.entity:
+            self.entity['externalReferences'] = []
+        self.entity['externalReferences'].append({'url': url})
 
-    @staticmethod
-    def check_accession(accession) -> bool:
-        """
-        Check if the provided accession conforms to a BioSamples identifier. Pattern extracted from
-        https://registry.identifiers.org/registry/biosample#!
-
-        :param accession: Accession ID for the sample in BioSamples
-        :return: True if correct format, False if not
-        """
-        return True if re.match('^SAM[NED](\\w)?\\d+$', accession) else False
+    def add_organization(self, organization):
+        if 'organization' not in self.entity:
+            self.entity['organization'] = []
+        self.entity['organization'].append({'Name': organization})
 
     def _flatten_relationships(self, flattened_json: dict, relationships: list[dict]) -> dict:
         """
@@ -431,6 +392,17 @@ class Biosample(GenericEntity):
         return flattened_json
 
     @staticmethod
+    def check_accession(accession) -> bool:
+        """
+        Check if the provided accession conforms to a BioSamples identifier. Pattern extracted from
+        https://registry.identifiers.org/registry/biosample#!
+
+        :param accession: Accession ID for the sample in BioSamples
+        :return: True if correct format, False if not
+        """
+        return True if re.match('^SAM[NED](\\w)?\\d+$', accession) else False
+
+    @staticmethod
     def _tag_is_valid(tag: str) -> bool:
         """
         Check if a tag is valid. Tags are evaluated against the :attr:`~Biosample.VALID_TAGS` global. VALID_TAGS extracted from:
@@ -453,10 +425,8 @@ class Biosample(GenericEntity):
 
 BIOSAMPLES_GUIDELINES = "A Biosamples entity MUST have the following properties set:\n" \
                         "\t- name: a descriptive title for the sample\n" \
-                        "\t- taxId or organism: either the integer code for a taxon ID (taxId), according to " \
-                        "https://www.ncbi.nlm.nih.gov/taxonomy, or a string that validates against those records " \
-                        "(organism)\nA Biosamples entity SHOULD have the following properties set:\n" \
-                        "\t- release: date of release for the metadata of the entity. DEFAULTS TO MOMENT OF CREATION.\n" \
+                        "\t- organism: a string that validates against NCBITaxon records \n" \
+                        "\t- release: date of release for the metadata of the entity, in YYYY-MM-DD format. Accepts iso format\n" \
                         "For more information, please see " \
                         "https://www.ebi.ac.uk/biosamples/docs/references/api/submit#_submission_minimal_fields.\n\n" \
                         "To indicate relationships in the samples, please use a field named after the relationship" \

@@ -1,4 +1,5 @@
 [![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff) [![PyPI](https://img.shields.io/pypi/v/biobroker.svg)](https://pypi.org/project/biobroker/) [![Documentation Status](https://readthedocs.org/projects/biobroker/badge/?version=latest)](https://biobroker.readthedocs.io/en/latest/?badge=latest)
+[![Pydantic v2](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/pydantic/pydantic/main/docs/badge/v2.json)](https://pydantic.dev)
 
 
 # Biobroker
@@ -41,7 +42,7 @@ is a module that loads all of them, but should be generic enough that only one n
 
 A graphical representation of the overall infrastructure can be seen below:
 
-```{mermaid}
+```mermaid
 
 graph LR;
 
@@ -107,6 +108,9 @@ you're not experienced with sphinx/unsure of how changes will look like in the R
 If you add a new subclass, please add it under the `autosummary` directive in the RST file. You can see the examples
 in the existing `docs/` folder.
 
+If you add a new pydantic model for metadata validation, please include it in `docs/biobroker.generic.rst` under the
+first automodule directive.
+
 #### Re-creating RST files from scratch
 
 If the RST files need to be regenerated, it can be done as so:
@@ -136,3 +140,6 @@ Regarding new entities:
     - If it's just used by the entity internally (e.g. `metadata_entity` calling a function to process certain data), make
       it private.
 - Add the new subclass under the '__init__.py' document, both in `__all__` and as an import
+- For pre-submission validation, please use pydantic models. You can easily generate valid pydantic models from schemas,
+  if they are available. I use pydantic models for slight data corrections as well (e.g. date parsing/formatting)
+

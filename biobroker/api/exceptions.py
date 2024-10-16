@@ -4,6 +4,7 @@ from requests import Response
 
 from json.decoder import JSONDecodeError
 
+from biobroker.generic.utilities import parse_pydantic_errors
 
 def parse_checklist_validation_errors(validation_errors: list[dict]):
     """
@@ -120,10 +121,10 @@ class ChecklistValidationError(Exception):
 
 
 class StructuredDataError(Exception):
-    def __init__(self, logger: logging.Logger, errors: list[str]):
+    def __init__(self, logger: logging.Logger, errors: list[dict]):
         delimiter = "\n\t- "
         self.message = (f"Structured data submission failed due to the following error(s):"
-                        f"{delimiter}{delimiter.join(errors)}\n Please see "
+                        f"{delimiter}{delimiter.join(parse_pydantic_errors(errors))}\n Please see "
                         f"https://www.ebi.ac.uk/biosamples/docs/references/api/submit#_submit_structured_data for more "
                         f"information")
         logger.error(self.message)

@@ -27,7 +27,6 @@ jobs:
       - name: Copy README and adjust mermaid for RTD
         run: |
           cp README.md docs/README.md
-          sed -i 's/`mermaid/`\{mermaid\}/g' docs/README.md
       - name: copy notebooks
         run: |
           cp -r examples/notebooks docs/
