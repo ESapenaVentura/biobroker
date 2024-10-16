@@ -3,3 +3,4 @@ numpy==1.23.1
 requests==2.31.0
 openpyxl==3.1.2
 progressbar2==4.4.2
+pydantic~=2.9.2
