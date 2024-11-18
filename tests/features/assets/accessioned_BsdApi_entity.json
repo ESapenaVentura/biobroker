@@ -1,0 +1,42 @@
+{
+  "name" : "python_test",
+  "accession" : "SAMEA131439753",
+  "sraAccession" : "ERS31094687",
+  "webinSubmissionAccountId" : "Webin-64342",
+  "status" : "PUBLIC",
+  "release" : "2024-08-22T15:27:18Z",
+  "update" : "2024-11-15T08:40:53.624Z",
+  "submitted" : "2024-11-15T08:40:53.624Z",
+  "characteristics" : {
+    "SRA accession" : [ {
+      "text" : "ERS31094687"
+    } ],
+    "organism" : [ {
+      "text" : "Homo sapiens"
+    } ],
+    "other_field" : [ {
+      "text" : "other_values"
+    } ]
+  },
+  "submittedVia" : "JSON_API",
+  "create" : "2024-11-15T08:40:53.624Z",
+  "_links" : {
+    "self" : {
+      "href" : "https://wwwdev.ebi.ac.uk/biosamples/samples/SAMEA131439753"
+    },
+    "curationDomain" : {
+      "href" : "https://wwwdev.ebi.ac.uk/biosamples/samples/SAMEA131439753{?curationdomain}",
+      "templated" : true
+    },
+    "curationLinks" : {
+      "href" : "https://wwwdev.ebi.ac.uk/biosamples/samples/SAMEA131439753/curationlinks"
+    },
+    "curationLink" : {
+      "href" : "https://wwwdev.ebi.ac.uk/biosamples/samples/SAMEA131439753/curationlinks/{hash}",
+      "templated" : true
+    },
+    "structuredData" : {
+      "href" : "https://wwwdev.ebi.ac.uk/biosamples/structureddata/SAMEA131439753"
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "accession": "SAMFAKE123456",
+  "create": "2024-08-14T11:20:26.862692038Z",
+  "update": "2024-08-14T11:20:26.862739302Z",
+  "data": [
+    {
+      "domain": "self.ExampleDomain",
+      "webinSubmissionAccountId": "Webin-12345",
+      "type": "AMR",
+      "schema": null,
+      "content": [
+        {
+          "resistancePhenotype": {
+            "value": "intermediate",
+            "iri": null
+          },
+          "astStandard": {
+            "value": "CLSI",
+            "iri": null
+          },
+          "laboratoryTypingMethod": {
+            "value": "disk diffusion",
+            "iri": null
+          },
+          "laboratoryTypingMethodVersionOrReagent": {
+            "value": "missing",
+            "iri": null
+          },
+          "vendor": {
+            "value": "Becton Dickinson",
+            "iri": null
+          },
+          "measurementSign ": {
+            "value": "==",
+            "iri": null
+          },
+          "antibioticName": {
+            "value": "nalidixic acid",
+            "iri": "http://purl.obolibrary.org/obo/value_1"
+          },
+          "measurementUnits": {
+            "value": "mm",
+            "iri": null
+          },
+          "measurement": {
+            "value": "17",
+            "iri": null
+          },
+          "platform": {
+            "value": "missing",
+            "iri": null
+          }
+        }
+      ]
+    }
+  ]
+}
