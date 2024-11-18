@@ -1,5 +1,5 @@
 from behave import *
-import dotenv
+import os
 
 from biobroker.api.exceptions import BiosamplesValidationError
 from biobroker.input_processor import XlsxInputProcessor
@@ -11,9 +11,10 @@ from biobroker.metadata_entity import Biosample
 import os
 
 def load_credentials(prefix):
-    values = dotenv.dotenv_values(".env")
-    assert values, f"'.env' file must be present in the folder, with {prefix}_USERNAME and {prefix}_PASSWORD"
-    return values[f'{prefix}_USERNAME'], values[f'{prefix}_PASSWORD']
+    username = os.environ.get(f'{prefix}_USERNAME')
+    password = os.environ.get(f'{prefix}_PASSWORD')
+    assert username and password, f"Username or password missing from environment variables for authenticator with prefix {prefix}"
+    return username, password
 
 @given("an input excel file and all the biobroker entities set up")
 def load_everything(context):

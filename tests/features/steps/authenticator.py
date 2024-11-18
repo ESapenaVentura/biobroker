@@ -1,14 +1,14 @@
 from behave import *
-import dotenv
 import os
 import re
 
 from biobroker.authenticator import WebinAuthenticator, GenericAuthenticator
 
 def load_credentials(prefix):
-    values = dotenv.dotenv_values(".env")
-    assert values, f"'.env' file must be present in the folder, with {prefix}_USERNAME and {prefix}_PASSWORD"
-    return values[f'{prefix}_USERNAME'], values[f'{prefix}_PASSWORD']
+    username = os.environ.get(f'{prefix}_USERNAME')
+    password = os.environ.get(f'{prefix}_PASSWORD')
+    assert username and password, f"Username or password missing from environment variables for authenticator with prefix {prefix}"
+    return username, password
 
 @given("a {auth} and a set of credentials loaded from '.env' with prefix {prefix}")
 def step_impl(context, auth, prefix):
