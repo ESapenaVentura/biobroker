@@ -6,6 +6,9 @@ on:
 jobs:
   ruff:
     runs-on: ubuntu-latest
+    env:
+      WEBIN_PASSWORD: ${{ secrets.WEBIN_PASSWORD }}
+      WEBIN_USERNAME: ${{ secrets.WEBIN_USERNAME }}
     steps:
       - uses: actions/checkout@v4
       - name: Set up Python
@@ -19,9 +22,6 @@ jobs:
           pip install -r requirements-dev.txt
           pip install biobroker
       - name: Run tests
-        with:
-          WEBIN_PASSWORD: ${{ secrets.WEBIN_PASSWORD }}
-          WEBIN_USERNAME: ${{ secrets.WEBIN_USERNAME }}
         run: |
           cd tests/features
           behave -e integration*
