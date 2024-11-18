@@ -4,7 +4,7 @@ on:
     paths: ["biobroker/**/*.py"]
 
 jobs:
-  ruff:
+  Behave:
     runs-on: ubuntu-latest
     env:
       WEBIN_PASSWORD: ${{ secrets.WEBIN_PASSWORD }}
