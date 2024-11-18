@@ -83,7 +83,7 @@ class BiosampleGeneralModel(BaseModel):
     characteristics: Dict[str, list[CharacteristicsFields]]
     relationships: Optional[list[Relationship]] = None
     organization: Optional[list[Organization]] = None
-    structuredData: Optional[StructuredDataModel] = None
+    structuredData: Optional[list[DataEntry]] = None
     externalReferences: Optional[list[ExternalUrl]] = None
 
     @field_validator('release')
