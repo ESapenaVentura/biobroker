@@ -51,9 +51,9 @@ def GenericApi(api: type[GenericApi]):
 
 
 def load_credentials_webin():
-    username = os.environ.get(f'{prefix}_USERNAME')
-    password = os.environ.get(f'{prefix}_PASSWORD')
-    assert username and password, f"Username or password missing from environment variables for authenticator with prefix {prefix}"
+    username = os.environ.get('WEBIN_USERNAME')
+    password = os.environ.get('WEBIN_PASSWORD')
+    assert username and password, f"Username or password missing from environment variables for authenticator with prefix WEBIN"
     return username, password
 
 def load_webin_authenticator():
