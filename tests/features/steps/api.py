@@ -2,7 +2,6 @@ from copy import deepcopy
 from os import access
 
 from behave import *
-import dotenv
 import os
 import json
 
