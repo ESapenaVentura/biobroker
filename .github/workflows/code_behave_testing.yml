@@ -1,7 +1,9 @@
 name: Behave Tests
 on:
   push:
-    paths: ["biobroker/**/*.py"]
+    paths: ["biobroker/**/*.py",
+            "tests/features/*.feature",
+            "tests/features/steps/*.py"]
 
 jobs:
   Behave:
