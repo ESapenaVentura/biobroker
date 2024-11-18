@@ -1,4 +1,4 @@
-Feature: Input processor unit and integration testing
+Feature: Input processor unit tests
 
   Scenario Outline: Save metadata to source
     Given an instance of <output_processor> and a <metadata_entity> subclass loaded with the content in <valid_minimal_json>

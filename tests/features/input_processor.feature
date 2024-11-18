@@ -1,4 +1,4 @@
-Feature: Input processor unit and integration testing
+Feature: Input processor unit tests
 
   Scenario Outline: Load metadata from source
     Given an instance of <input_processor> loaded with an <input_file>
