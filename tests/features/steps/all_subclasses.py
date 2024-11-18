@@ -1,7 +1,7 @@
 from behave import *
-import dotenv
 import json
 import inspect
+import os
 import sys
 sys.path.insert(0, "/Users/enrique/PycharmProjects/biobroker")
 
@@ -51,9 +51,10 @@ def GenericApi(api: type[GenericApi]):
 
 
 def load_credentials_webin():
-    values = dotenv.dotenv_values(".env")
-    assert values, "'.env' file must be present in the folder, with WEBIN_USERNAME and WEBIN_PASSWORD"
-    return (values['WEBIN_USERNAME'], values['WEBIN_PASSWORD'])
+    username = os.environ.get(f'{prefix}_USERNAME')
+    password = os.environ.get(f'{prefix}_PASSWORD')
+    assert username and password, f"Username or password missing from environment variables for authenticator with prefix {prefix}"
+    return username, password
 
 def load_webin_authenticator():
     return (WebinAuthenticator(*load_credentials_webin()),)
