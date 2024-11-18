@@ -8,6 +8,9 @@ from biobroker.generic.exceptions import MandatoryFunctionNotSet
 from biobroker.generic.logger import set_up_logger
 from biobroker.metadata_entity import GenericEntity
 
+"""
+Test the behave tests
+"""
 
 class GenericInputProcessor:
     """
