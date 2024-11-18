@@ -1,4 +1,4 @@
-Feature: Authenticator unit and integration tests
+Feature: Authenticator unit tests
 
   Scenario Outline: Authenticator points to development and returns token
     Given a <auth> and a set of credentials loaded from '.env' with prefix <prefix>
