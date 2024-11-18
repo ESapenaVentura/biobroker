@@ -91,7 +91,7 @@ class BiosampleGeneralModel(BaseModel):
     def parse_date(cls, value):
         try:
             value = parser.isoparse(value).strftime("%Y-%m-%dT%H:%M:%SZ")
-        except ValueError as e:
+        except ValueError:
             raise ValueError("Invalid date format. Should be provided as YYYY-MM-DD with optional Thh:mm:ss.sssZ") from None
         return value
 
