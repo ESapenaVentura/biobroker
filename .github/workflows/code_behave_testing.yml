@@ -4,6 +4,7 @@ on:
     paths: ["biobroker/**/*.py",
             "tests/features/*.feature",
             "tests/features/steps/*.py"]
+  workflow_dispatch:
 
 jobs:
   Behave:
