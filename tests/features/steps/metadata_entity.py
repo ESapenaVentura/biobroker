@@ -1,6 +1,9 @@
 from behave import *
 import json
 
+import sys
+sys.path.insert(0, "../../")
+
 from biobroker.metadata_entity import Biosample
 
 @given("all the metadata entity classes")

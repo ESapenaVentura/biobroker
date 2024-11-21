@@ -2,6 +2,9 @@ from behave import *
 import os
 import re
 
+import sys
+sys.path.insert(0, "../../")
+
 from biobroker.authenticator import WebinAuthenticator, GenericAuthenticator
 
 def load_credentials(prefix):

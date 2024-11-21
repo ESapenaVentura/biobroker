@@ -3,6 +3,9 @@ from behave import *
 import json
 import pandas as pd
 
+import sys
+sys.path.insert(0, "../../")
+
 from biobroker.output_processor import TsvOutputProcessor, XlsxOutputProcessor, GenericOutputProcessor
 from biobroker.metadata_entity import Biosample
 

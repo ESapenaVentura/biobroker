@@ -3,7 +3,7 @@ import json
 import inspect
 import os
 import sys
-sys.path.insert(0, "/Users/enrique/PycharmProjects/biobroker")
+sys.path.insert(0, "../../")
 
 from biobroker.api import GenericApi, BsdApi
 from biobroker.generic.exceptions import MandatoryFunctionNotSet
@@ -11,6 +11,7 @@ from biobroker.input_processor import TsvInputProcessor, XlsxInputProcessor, Gen
 from biobroker.metadata_entity import GenericEntity, Biosample
 from biobroker.output_processor import TsvOutputProcessor, XlsxOutputProcessor, GenericOutputProcessor
 from biobroker.authenticator import WebinAuthenticator
+
 
 def test_mandatory_methods(instance, list_of_methods):
     for mandatory_method in list_of_methods:

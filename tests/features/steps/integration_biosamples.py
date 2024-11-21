@@ -1,6 +1,9 @@
 from behave import *
 import os
 
+import sys
+sys.path.insert(0, "../../")
+
 from biobroker.api.exceptions import BiosamplesValidationError
 from biobroker.input_processor import XlsxInputProcessor
 from biobroker.output_processor import XlsxOutputProcessor

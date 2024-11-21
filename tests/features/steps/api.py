@@ -1,9 +1,10 @@
-from copy import deepcopy
-from os import access
-
 from behave import *
 import os
 import json
+
+import sys
+sys.path.insert(0, "../../")
+
 
 from biobroker.authenticator import WebinAuthenticator
 from biobroker.api import BsdApi
