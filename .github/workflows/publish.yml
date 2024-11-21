@@ -8,6 +8,9 @@ jobs:
   pypi-publish:
     name: Publish release to PyPI
     runs-on: ubuntu-latest
+    env:
+      WEBIN_PASSWORD: ${{ secrets.WEBIN_PASSWORD }}
+      WEBIN_USERNAME: ${{ secrets.WEBIN_USERNAME }}
     environment:
       name: pypi
       url: https://pypi.org/p/biobroker
