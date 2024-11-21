@@ -2,7 +2,7 @@ from copy import deepcopy
 from typing import Type
 
 from pandas import read_csv, read_excel
-from numpy import NaN
+from numpy import nan
 
 from biobroker.generic.exceptions import MandatoryFunctionNotSet
 from biobroker.generic.logger import set_up_logger
@@ -98,7 +98,7 @@ class TsvInputProcessor(GenericInputProcessor):
 
         :param path: Path to input data
         """
-        file = read_csv(path, sep="\t", encoding='cp437').fillna(NaN).replace([NaN], [None])
+        file = read_csv(path, sep="\t", encoding='cp437').fillna(nan).replace([nan], [None])
         json_file = file.to_dict(orient='records')
         self._input_data = json_file
 
@@ -121,6 +121,6 @@ class XlsxInputProcessor(GenericInputProcessor):
 
         :param path: Path to the file with the input metadata.
         """
-        file = read_excel(path, engine='openpyxl', sheet_name=self.sheet_name).fillna(NaN).replace([NaN], [None])
+        file = read_excel(path, engine='openpyxl', sheet_name=self.sheet_name).fillna(nan).replace([nan], [None])
         json_file = file.to_dict(orient='records')
         self._input_data = json_file
