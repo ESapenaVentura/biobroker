@@ -24,8 +24,13 @@ jobs:
           python -m pip install --upgrade pip
           pip install setuptools wheel
           pip install --upgrade build # Compatibility things
+          pip install -r requirements-dev.txt
       - name: Build package
         run: |
           python -m build
+      - name: Test before publication
+        run: |
+          cd tests/features
+          behave
       - name: Publish package distributions to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
