@@ -372,9 +372,13 @@ class Biosample(GenericEntity):
                 match tag:
                     case "text":
                         flattened_json[field_name] = value
-                    case _:
+                    case 'unit':
                         # Returning units and ontologyTerm's to their natural habitat
                         flattened_json[f"{field_name}{self.delimiter}{tag}"] = value
+                    case 'ontologyTerms':
+                        flattened_json[f"{field_name}{self.delimiter}{tag}"] = self.delimiter.join(value)
+                    case _:
+                        self.logger.warning(f'Sample {self.id}: tag {tag} not recognised. Not flattening its value: {value}')
             flattened_json[field_name] = "||".join([f"{v['text']}" for v in values])
         return flattened_json
 
