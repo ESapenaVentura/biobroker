@@ -25,10 +25,10 @@ methods can be added as necessary.
 
 - _submit: Function called by `submit` when only one entity is sent to `submit`
 - _submit_multiple: Function called by `submit` when multiple entities are sent to `submit`
-- Same with `retrieve` and `update`.
+- Same with `retrieve`, `update`, `delete` and `release`.
 """
 
-from .api import GenericApi, BsdApi
+from .api import GenericApi, BsdApi, WebinV2Api
 
 # This lets Sphinx know you want to document package.module.Class as package.Class.
-__all__ = ['GenericApi', 'BsdApi']
+__all__ = ['GenericApi', 'BsdApi', 'WebinV2Api']

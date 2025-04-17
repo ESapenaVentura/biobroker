@@ -6,6 +6,7 @@ from json.decoder import JSONDecodeError
 
 from biobroker.generic.utilities import parse_pydantic_errors
 
+
 def parse_checklist_validation_errors(validation_errors: list[dict]):
     """
     Parse a checklist validation error and return it in a printable state.
@@ -18,6 +19,17 @@ def parse_checklist_validation_errors(validation_errors: list[dict]):
                                            for i in range(len(validation_errors))])
     return validation_errors_str
 
+class AccessionsNotFound(Exception):
+    def __init__(self, entity_id: list[str], logger: logging.Logger):
+        """
+        Raise when accession is not found.
+
+        :param accession: string passed as an accession
+        :param logger: subclass logger to log the error message to.
+        """
+        message = f"Could not find accession in entity '{','.join(entity_id)}'"
+        logger.error(message)
+        super().__init__(message)
 
 class AccessionHasIncorrectFormat(Exception):
     def __init__(self, accession: str, logger: logging.Logger):
@@ -88,7 +100,7 @@ class BiosamplesValidationError(Exception):
 
 
 class BiosamplesNoErrorMessageError(Exception):
-    def __init__(self, status_code: int, logger: logging.Logger):
+    def __init__(self, status_code: int, response_text: str, logger: logging.Logger):
         """
         Raise an error without any other issue but a 400 in the response and no text whatsoever.
         Current testing (Completely empirical) has told me that this can be raised in the following situations:
@@ -97,7 +109,7 @@ class BiosamplesNoErrorMessageError(Exception):
         :param logger: subclass logger to log the error message to.
         """
         self.message = (f"It's dangerous to go alone, take this error code: '{status_code}' with you (There was no "
-                        f"error message))")
+                        f"error message). If this helps, the response text was: '{response_text}'")
         logger.error(self.message)
         super().__init__(self.message)
 
@@ -133,5 +145,60 @@ class StructuredDataError(Exception):
 class StructuredDataSubmissionError(Exception):
     def __init__(self, logger: logging.Logger, response: Response):
         self.message = f"Error submitting structured data: {response.text}"
+        logger.error(self.message)
+        super().__init__(self.message)
+
+class EnaNoSubmissionProvidedError(Exception):
+    def __init__(self, logger: logging.Logger):
+        self.message = f"No EnaSubmission was provided in the list of entities; need to provide one."
+        logger.error(self.message)
+        super().__init__(self.message)
+
+class EnaAccessionTypeNotFound(Exception):
+    def __init__(self, logger: logging.Logger, accession: str):
+        self.message = f"Accession {accession} type not found; please ensure there are no typos."
+        logger.error(self.message)
+        super().__init__(self.message)
+
+class EnaInvalidEntityError(Exception):
+    def __init__(self, logger: logging.Logger, entity_name: str):
+        self.message = (f"Entity {entity_name} is not a valid entity for submission to ENA. If you think this is a bug, "
+                        f"please report to https://github.com/ESapenaVentura/biobroker/issues.")
+        logger.error(self.message)
+        super().__init__(self.message)
+
+class EnaInvalidEntityTypeError(Exception):
+    def __init__(self, logger: logging.Logger, entity_name: str, found_entity_type_list: set, expected_entity_type: str):
+        self.message = (f"For the list of entities of type {entity_name}, found the following entity types: "
+                        f"{','.join(found_entity_type_list)}. Expected entity type: {expected_entity_type}.")
+        logger.error(self.message)
+        super().__init__(self.message)
+
+
+class EnaSubmissionError(Exception):
+    def __init__(self, logger: logging.Logger, error_list: list):
+        formatted_error_list = {}
+        for error in error_list:
+            if error.startswith('File '):
+                entity_type = 'Files'
+                alias = error.split(' ')[1]
+                error_message = " ".join(error.split(' ')[2:])
+            elif error.startswith('Failed to'):
+                entity_type = error.split(' ')[3]
+                alias = error.split('"')[1]
+                error_message = error.split(', ')[1]
+            else:
+                entity_type = error.split(',')[0].replace('In ', '')
+                alias = error.split('"')[1]
+                error_message = error.split('. ')[1]
+            if entity_type not in formatted_error_list:
+                formatted_error_list[entity_type] = []
+            formatted_error_list[entity_type].append(f"Alias '{alias}': {error_message}")
+        message_delimiter = "\n\t- "
+        error_messages = "\n".join([f"{entity_type}:\n\t- {message_delimiter.join(formatted_error_list[entity_type])}"
+                                    for entity_type in formatted_error_list])
+        self.message = (f"Errors found when applying operations to ENA:\n{error_messages}\nIf you think this is an error,"
+                        "please report to ENA helpdesk (https://www.ebi.ac.uk/ena/browser/support) or open an issue"
+                        "on https://github.com/ESapenaVentura/biobroker/issues")
         logger.error(self.message)
         super().__init__(self.message)
