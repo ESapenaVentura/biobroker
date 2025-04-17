@@ -9,11 +9,13 @@ Feature: initialize classes
           | subclass_object   | arguments                     | parent_class           |
           | TsvInputProcessor | ["assets/valid_minimal.tsv"]  | GenericInputProcessor  |
           | XlsxInputProcessor| ["assets/valid_minimal.xlsx"] | GenericInputProcessor  |
+          | ComplexXlsxInputProcessor| ["assets/valid_minimal.xlsx", ["Sheet1"]] | GenericInputProcessor  |
 
       Examples: Output Processors
           | subclass_object    | arguments                    | parent_class            |
           | TsvOutputProcessor | ["assets/valid_minimal.tsv"] | GenericOutputProcessor  |
           | XlsxOutputProcessor| ["assets/valid_minimal.xlsx"]| GenericOutputProcessor  |
+          | ComplexXlsxOutputProcessor| ["assets/valid_minimal.xlsx"] | GenericOutputProcessor  |
 
 
       Examples: Authenticator
@@ -23,7 +25,11 @@ Feature: initialize classes
       Examples: API
           | subclass_object   | arguments                       | parent_class        |
           | BsdApi            | ["function", "load_webin_authenticator"]  | GenericApi|
+          | WebinV2Api        | ["function", "load_webin_authenticator"]  | GenericApi|
 
       Examples: Metadata Entities
           | subclass_object   | arguments                                 | parent_class  |
           | Biosample         | ["function", "load_biosample_valid_json"] | GenericEntity |
+          | EnaRun            | ["function", "load_ena_valid_json"]       | GenericEntity |
+          | EnaExperiment     | ["function", "load_ena_valid_json"]       | GenericEntity |
+          | EnaStudy          | ["function", "load_ena_valid_json"]       | GenericEntity |

@@ -5,11 +5,11 @@ import os
 import sys
 sys.path.insert(0, "../../")
 
-from biobroker.api import GenericApi, BsdApi
+from biobroker.api import GenericApi, BsdApi, WebinV2Api
 from biobroker.generic.exceptions import MandatoryFunctionNotSet
-from biobroker.input_processor import TsvInputProcessor, XlsxInputProcessor, GenericInputProcessor
-from biobroker.metadata_entity import GenericEntity, Biosample
-from biobroker.output_processor import TsvOutputProcessor, XlsxOutputProcessor, GenericOutputProcessor
+from biobroker.input_processor import TsvInputProcessor, XlsxInputProcessor, ComplexXlsxInputProcessor, GenericInputProcessor
+from biobroker.metadata_entity import GenericEntity, Biosample, EnaEntity, EnaStudy, EnaRun, EnaExperiment
+from biobroker.output_processor import TsvOutputProcessor, XlsxOutputProcessor, ComplexXlsxOutputProcessor, GenericOutputProcessor
 from biobroker.authenticator import WebinAuthenticator
 
 
@@ -61,7 +61,12 @@ def load_webin_authenticator():
     return (WebinAuthenticator(*load_credentials_webin()),)
 
 def load_biosample_valid_json():
-    with open('assets/valid_minimal.json', 'r') as f:
+    with open('assets/biosamples_valid_minimal.json', 'r') as f:
+        value = json.load(f)
+    return (value,)
+
+def load_ena_valid_json():
+    with open('assets/ena_valid_minimal.json', 'r') as f:
         value = json.load(f)
     return (value,)
 

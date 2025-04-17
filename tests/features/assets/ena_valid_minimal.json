@@ -1,0 +1,7 @@
+{
+  "alias": "python_test",
+  "title": "Python test",
+  "experiment||alias": "python experiment test",
+  "files||fileName": "valid_minimal_test.tsv",
+  "files||fileType":  "tab"
+}
