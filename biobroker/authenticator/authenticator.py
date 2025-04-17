@@ -7,6 +7,7 @@ from requests.packages.urllib3.util.retry import Retry
 from biobroker.authenticator.exceptions import WrongUserOrPassword, UsernameNotValid
 from biobroker.generic.exceptions import MandatoryFunctionNotSet
 from biobroker.generic.logger import set_up_logger
+from biobroker.metadata_entity import GenericEntity
 
 
 class GenericAuthenticator:
@@ -76,16 +77,15 @@ class GenericAuthenticator:
         s.mount('https://', HTTPAdapter(max_retries=retries))
 
         r = s.request(url=url, method=method, json=payload, headers={'Authorization': self.token,
-                                                                     'Content-Type': 'application/json'},
-                      )
+                                                                     'Content-Type': 'application/json',
+                                                                     'accept': 'application/json'})
 
-        if r.status_code == 401:
+        if 401 <= r.status_code <= 403:
             self.logger.warning(f"{method} request returned status code {r.status_code}. "
                                 "Refreshing token and trying again.")
             self.token = (self.username, self.password)
             r = s.request(url=url, method=method, json=payload, headers={'Authorization': self.token,
-                                                                         'Content-Type': 'application/json'},
-                          )
+                                                                         'Content-Type': 'application/json'})
         return r
 
     def get(self, url: str) -> requests.Response:
@@ -97,7 +97,7 @@ class GenericAuthenticator:
         """
         return self._request(url, "GET", {})
 
-    def post(self, url: str, payload: dict) -> requests.Response:
+    def post(self, url: str, payload: dict | GenericEntity | list[GenericEntity]) -> requests.Response:
         """
         POST a payload to a URL
 

@@ -221,7 +221,8 @@ cython_debug/
 # Ignore outputs from examples
 examples/**/*.txt
 examples/**/*.tsv
-examples/**/*.xlsx
+examples/notebooks/**/*.xlsx
+examples/scripts/**/*.xlsx
 examples/**/*.py
 
 docs/notebooks/**/*.txt

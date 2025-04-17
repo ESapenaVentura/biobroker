@@ -7,7 +7,7 @@ sys.path.insert(0, "../../")
 
 
 from biobroker.authenticator import WebinAuthenticator
-from biobroker.api import BsdApi
+from biobroker.api import BsdApi, WebinV2Api
 from biobroker.api.exceptions import StructuredDataError
 from biobroker.metadata_entity import Biosample
 
@@ -27,7 +27,8 @@ def load_credentials(prefix):
 @given("all the API classes and their corresponding authenticator")
 def preload_instances(context):
     context.instances = {}
-    for subclass_api, subclass_authenticator, prefix in (('BsdApi', 'WebinAuthenticator', 'WEBIN'),):
+    for subclass_api, subclass_authenticator, prefix in (('BsdApi', 'WebinAuthenticator', 'WEBIN'),
+                                                         ('WebinV2Api', 'WebinAuthenticator', 'WEBIN'),):
         subclass_api_object = eval(subclass_api)
         subclass_authenticator_object = eval(subclass_authenticator)
         os.environ['API_ENVIRONMENT'] = "dev"
@@ -70,7 +71,7 @@ def retrieve(context):
     assert all([context.submitted_entities[i].entity == retrieved_entities[i].entity
                 for i in range(len(retrieved_entities))])
 
-@when("An API instance named {api_instance_name} is used to update the entity")
+@when("an API instance named {api_instance_name} is used to update the entity")
 def update(context, api_instance_name):
     context.api_instance_name = api_instance_name
     context.api_subclass_instance = context.instances[api_instance_name]
@@ -88,6 +89,21 @@ def update(context):
     assert len(context.updated_entities) == context.length
     original_acessioned = context.accessioned_entities if isinstance(context.accessioned_entities, list) else [context.accessioned_entities]
     assert all([original_acessioned[i] is context.updated_entities[i] for i in range(len(context.updated_entities))])
+
+@when("an API instance named <api_instance_name> is used to delete the entity")
+def delete(context, api_instance_name):
+    context.api_instance_name = api_instance_name
+    context.api_subclass_instance = context.instances[api_instance_name]
+    function_to_mock = f"biobroker.api.{api_instance_name}._delete"
+    if context.length > 1:
+        function_to_mock += "_multiple"
+    with mock.patch(function_to_mock) as mocked_delete_function:
+        mocked_delete_function.return_value = "Deleted"
+        context.deleted_entities = context.api_subclass_instance.delete(context.metadata_entity.accession)
+
+@then("the entity should be deleted")
+def delete(context):
+    assert context.deleted_entities == "Deleted", "Proper delete function was not called"
 
 @given("an invalid structured data object")
 def struc_data_negative(context):

@@ -18,3 +18,25 @@ With the Behave suite, tests are divided in ~2 files:
 - A feature file, containing the test written in [Gherkin language](https://behave.readthedocs.io/en/latest/gherkin/#chapter-gherkin)
 - A python file within the `steps` folder, containing the code to carry the tests.
 
+## How to run the tests
+
+1. Install the requirements for the tests:
+```bash
+pip install behave biobroker
+```
+
+2. Set up the environmental variables:
+```bash
+export API_ENVIRONMENT=dev
+export WEBIN_PASSWORD=<your_webin_password>
+export WEBIN_USERNAME=<your_webin_username>
+```
+
+3. Run the tests:
+```bash
+behave -e tests/features/integration*
+```
+
+This will run all the tests except the integration ones. Integration tests are a bit more complicated to run, as they
+create entities in the archives - Please don't run them unnecessarily, as some archives (e.g. BioSamples) never fully
+delete their entities from the database.

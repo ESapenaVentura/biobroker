@@ -9,3 +9,7 @@
 
 - Additional errors needed:
   - Requests that get a 400 (e.g. Trying to update samples not owned by the user)
+
+Webinv2Api:
+- Catching errors in self.upload_file ; currently assumes file upload always fails during upload, and not on e.g. authentication
+- **improvement**: Check if file size in local vs remote is the same when uploading - if not, assume remote is corrupted and overwrite.

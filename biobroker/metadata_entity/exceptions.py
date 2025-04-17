@@ -47,3 +47,10 @@ class NoOrganismSetError(Exception):
         self.message = f"Property 'organism' (Or any variant) needs to be set-up for the sample '{sample_id}'"
         logger.error(self.message)
         super().__init__(self.message)
+
+class FileNumberDoesNotMatchError(Exception):
+    def __init__(self, logger: logging.Logger, filenames_provided, filenames_found):
+        self.message = (f"Number of files found does not match with file metadata; filenames provided: "
+                        f"{', '.join(filenames_provided)}, filenames found: {', '.join(filenames_found)}")
+        logger.error(self.message)
+        super().__init__(self.message)

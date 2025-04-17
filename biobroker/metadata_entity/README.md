@@ -25,3 +25,8 @@ BsdApi:
 - **KNOWN BUG**: Multiple relationships may not be added correctly with '__setitem__'
 - **KNOWN BUG**: The order of the factors does alter the product. Accession needs to be set-up first in order for some of the '__setitem__' checks to go through correctly. Whoopsie.
 - Add support to flatten organisations
+
+EnaEntity:
+- Missing EnaAnalysis
+- Order the f-lovely entities
+- Ensure docs are up to date

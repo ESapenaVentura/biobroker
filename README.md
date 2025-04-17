@@ -123,6 +123,22 @@ sphinx-apidoc -Mf -o docs biobroker
 This will regenerate the rst files with module content first! Just as I like it. However, we almost never want to
 regenerate the RST files - So please don't do this without opening an issue and a related PR.
 
+## Supported archives and actions
+
+- BioSamples (BSD)
+  - Full sample submission (Including metadata tags such as `ontologyValues`)
+  - Full sample update
+  - Full sample "deletion" (Samples can't be deleted, but can be made private for 100 years and their metadata redacted)
+  - Easy sample release (Release sample to public easily by just calling a function)
+  - Structured data submission
+
+- European Nucleotide Archive (ENA)
+  - Full submission of genomic data (Reads)
+  - Full update
+  - Full deletion (Cancelling of non-public entities)
+  - Easy entity (run, experiment, study) release
+  - Parallel sample submission to BSD with automatic linking
+
 ## Notes for developers
 Regarding documentation:
 
@@ -144,3 +160,18 @@ Regarding new entities:
 - For pre-submission validation, please use pydantic models. You can easily generate valid pydantic models from schemas,
   if they are available. I use pydantic models for slight data corrections as well (e.g. date parsing/formatting)
 
+# To-do
+
+- Need a "release" function in the API class, to release multiple entities into the wild.
+  - Need to incorporate it in the tests
+- Is the "delete" function integrated in all API classes?
+- Need to update the progress bars to use rich instead of tqdm
+- API WebinV2: May not be reliable, but "good enough". Need to make it clear in documentation.
+- Generate a set of templates for BioSamples and ENA
+- Create a section of "first-time" brokering
+  - Main readme should have "Use cases" and links to this section
+  - Find the templates
+  - Familiarise yourself with an actual example
+  - Think how to familiarise people with restrictions so they don't have to do a lot of trial-error
+  - Per each functional metadata ENA, create a table:
+  | property_name | description | mandatory? | example value | (Could use json-schema-for-humans?)

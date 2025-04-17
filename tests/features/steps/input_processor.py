@@ -15,7 +15,7 @@ def step_load(context, input_processor, input_file):
 
 @when('I have a JSON file with the same content')
 def step_load_json(context):
-    with open('assets/valid_minimal.json', 'r') as f:
+    with open('assets/biosamples_valid_minimal.json', 'r') as f:
         context.valid_minimal_json = json.load(f)
 
 @then('the input_data must be the same as the JSON file')

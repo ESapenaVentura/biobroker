@@ -35,12 +35,11 @@ be turned to string.
 
 **Aspects to improve**:
 
-- Biosamples entity: taxonId or organism must be set up. Currently allows entities to be created without those fields.
 - Biosamples entity: Currently the root keys are hardcoded in the submodule. I wonder what would be the best way to
   indicate them without complicating the code and depending too much on external files. These are not bound to change
   much - but still, not good practice to have them in the code.
 """
 
-from .metadata_entity import GenericEntity, Biosample
+from .metadata_entity import GenericEntity, Biosample, EnaEntity, EnaExperiment, EnaStudy, EnaProject, EnaRun, EnaSubmission
 
-__all__ = ['GenericEntity', 'Biosample']
+__all__ = ['GenericEntity', 'Biosample', 'EnaEntity', 'EnaExperiment', 'EnaStudy', 'EnaProject', 'EnaRun', 'EnaSubmission']
