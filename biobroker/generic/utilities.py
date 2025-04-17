@@ -1,5 +1,8 @@
 from typing import Generator
+import hashlib
+import os
 
+from rich.progress import Progress, BarColumn, TimeRemainingColumn, TimeElapsedColumn, TextColumn
 
 def slice_list(list_to_chunk: list | tuple, chunk_size: int) -> Generator:
     """
@@ -30,3 +33,16 @@ def parse_pydantic_errors(pydantic_errors: list[dict]) -> list:
                 message = error['msg']
         messages.append(f"{location}: {message}. Provided value: '{user_input}'")
     return messages
+
+def get_file_details(file_path: str) -> tuple[str, int]:
+    """
+    Get the MD5 hash of a file.
+
+    :param file_path: Path to the file.
+    :return: MD5 hash and size of the file.
+    """
+    md5_hash = hashlib.md5()
+    with open(file_path, "rb") as f:
+        for chunk in iter(lambda: f.read(4096), b""):
+            md5_hash.update(chunk)
+    return md5_hash.hexdigest(), os.path.getsize(file_path)
