@@ -16,6 +16,6 @@ dataframe and save it with pandas functionality into different formats. Pretty s
 - _save
 """
 
-from .output_processor import GenericOutputProcessor, TsvOutputProcessor, XlsxOutputProcessor
+from .output_processor import GenericOutputProcessor, TsvOutputProcessor, XlsxOutputProcessor, ComplexXlsxOutputProcessor
 
-__all__ = ['GenericOutputProcessor', 'TsvOutputProcessor', 'XlsxOutputProcessor']
+__all__ = ['GenericOutputProcessor', 'TsvOutputProcessor', 'XlsxOutputProcessor', 'ComplexXlsxOutputProcessor']
