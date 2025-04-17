@@ -1,16 +1,20 @@
 import json
 import re
+from glob import glob
 
 import pydantic_core
 from typing import Any, Type
 
 from pydantic import BaseModel
 
-from biobroker.generic.pydantic_model import BiosampleGeneralModel
+from biobroker.generic.pydantic_model import EnaExperimentModel, EnaSubmissionModel, \
+    EnaProjectModel, EnaStudyModel, EnaRunModel, BiosampleGeneralModel
+
 from biobroker.metadata_entity.exceptions import (RelationshipInvalidSourceError, RelationshipInvalidTargetError,
-                                                  EntityValidationError)
+                                                  EntityValidationError, FileNumberDoesNotMatchError)
 from biobroker.generic.exceptions import MandatoryFunctionNotSet
 from biobroker.generic.logger import set_up_logger
+
 
 # MONKEY PATCHING JSON ENCODER TO MAKE ENTITIES JSON SERIALIZABLE #
 def _default(self, obj):
@@ -81,6 +85,7 @@ class GenericEntity:
         except pydantic_core.ValidationError as pydantic_error:
             raise EntityValidationError(self.logger, entity_id=self.id, errors=pydantic_error.errors()) from None
 
+
     def flatten(self):
         """
         Flatten the .entity, returning a non-nested dictionary.
@@ -110,6 +115,14 @@ class GenericEntity:
         Must be overriden by subclasses.
         """
         raise MandatoryFunctionNotSet(self.logger)
+
+    def has_accession(self) -> bool:
+        """
+        Check if the entity has an accession.
+
+        :return: True if the entity has an accession, False if not.
+        """
+        return self.accession != ""
 
     @staticmethod
     def guidelines() -> str:
@@ -436,3 +449,380 @@ BIOSAMPLES_GUIDELINES = "A Biosamples entity MUST have the following properties 
                         "To indicate relationships in the samples, please use a field named after the relationship" \
                         "itself: namely, 'derived_from', 'same_as', 'has_member' or 'child_of'.\nPlease see" \
                         "https://www.ebi.ac.uk/biosamples/docs/guides/relationships"
+
+class EnaEntity(GenericEntity):
+    """
+    ENA submission metadata entity. Contains the necessary information to process a non-nested JSON into a valid ENA
+    submission containing all the other necessary entities.
+
+    :param metadata_content: non-nested dictionary containing the metadata for the sample.
+    :param data_model: Optional parameter, used to evaluate the metadata content. Defaults to :cls:`~biobroker.generic.pydantic_model.BiosampleGeneralModel`
+    :param delimiter: optional parameter, used for key delimiters. Used mainly to manage attributes tags, such as
+                          'unit' and 'ontologyTerms'. Explained further in
+                          :func:`~broker.metadata_entity.biosample.Biosample.__setitem__`, point 4.
+    :param verbose: True if logger should be set to INFO. Default WARNING.
+    """
+    submission_field_name = None
+    ROOT_PROPERTIES = ["alias", "accession", "identifiers", "centerName", "title", "instrumentPlatform",
+                       "instrumentModel", "study", "samples", "libraryDescriptor", "experiment", "files",
+                       "attributes", "actions"]
+
+    def __init__(self, metadata_content: dict, data_model: type[BaseModel], delimiter: str="||", verbose: bool=False):
+        self.delimiter = delimiter
+        super().__init__(metadata_content, data_model=data_model, verbose=verbose)
+
+    @property
+    def complex_fields(self):
+        """
+        Return the property 'complex_fields'. Must be overriden by subclasses. Lists all the properties that
+        are complex (nested).
+
+        :raises: `~biobroker.generic.exceptions.MandatoryFunctionNotSet`
+        """
+        raise MandatoryFunctionNotSet(self.logger)
+
+    @property
+    def complex_fields_array(self):
+        """
+        Return the property 'complex_fields'. Must be overriden by subclasses. Lists all the properties that
+        are complex (nested) and an array.
+
+        :raises: `~biobroker.generic.exceptions.MandatoryFunctionNotSet`
+        """
+        raise MandatoryFunctionNotSet(self.logger)
+
+    @property
+    def id(self):
+        """
+        Return the property 'id', extracting it from the 'name' property. Defaults to an empty string.
+
+        :return:
+        """
+        return self.entity.get('alias', '')
+
+    @property
+    def accession(self) -> str:
+        """
+        Return the property 'accesssion', extracting it from the 'accession'. Defaults to an emtpy string
+
+        :return:
+        """
+        return self.entity.get('accession', '')
+
+    @GenericEntity.entity.setter
+    def entity(self, metadata: dict):
+        """
+        Setter for the 'entity' property. Sets up a new sample, with the basic 'name' and 'characteristics' properties.
+
+        :param metadata: non-nested dictionary containing the metadata for the sample.
+        """
+        self._entity = {}
+        for field, value in metadata.items():
+            if value is None:
+                continue
+            self[field] = value
+
+    def __getitem__(self, item) -> str | int | dict | list:
+        """
+        Special method to get values from the EnaEntity.entity. Tries to obtain it from root and then complex fields;
+        raises ValueError if not found.
+
+        :param item: Value of the key to look up for
+
+        :return: Value of the item if found.
+        """
+        if self.delimiter in item:
+            item = item.split(self.delimiter)
+            if item[0] in self.complex_fields:
+                return self.entity[item[0]][item[1]]
+            elif item[0] in self.complex_fields_array:
+                return [complex_field[item[1]] for complex_field in self.entity[item[0]]]
+            else:
+                return [attribute[item[1]] for attribute in self.entity[item[0]]]
+        return self.entity[item]
+
+    def __delitem__(self, key: str):
+        """
+        Special method to delete the values from an EnaEntity.entity subclass.
+        You can delete tags of non-array fields by using delimiter, e.g. libraryDescriptor||libraryName
+
+        :param key: Key to search for for deletion
+        :return:
+        """
+
+        if key in EnaEntity.ROOT_PROPERTIES:
+            del self.entity[key]
+        elif key in self.complex_fields:
+            keys = key.split(self.delimiter)
+            match len(keys):
+                case 1:
+                    del self.entity[keys[0]]
+                case 2:
+                    del self.entity[keys[0]][0][keys[1]]
+                case _:
+                    # Nested values maximum nesting level
+                    raise KeyError(key)
+        else:
+            del self.entity['attributes'][key]
+
+    def __setitem__(self, key: str, value: Any):
+        """
+        Special method to set the items for the EnaEntity subclasses, either in the root as-is, as complex fields
+        (Array or single field, usually used for linking), or as attributes (Anything else)
+
+        :param key: name of the attribute.
+        :param value: value of the attribute.
+        """
+        if key in EnaEntity.ROOT_PROPERTIES:
+            self.entity[key] = value
+
+        elif key.split(self.delimiter)[0] in self.complex_fields or key.split(self.delimiter)[0] in self.complex_fields_array:
+            key, tag = key.split(self.delimiter)
+            values = value.split(self.delimiter)
+            self._add_complex_fields(key, tag, values)
+        else:
+            if not self.entity.get('attributes'):
+                self.entity['attributes'] = []
+            if not key in self.entity['attributes']:
+                self.entity['attributes'].append({'tag': key, "value": value, "unit": None})
+            return
+
+    def __contains__(self, item: str) -> bool:
+        """
+        Special method to check if EnaEntity.entity  contains 'item'.
+        :param item: value of the key to check for.
+        :return: True if found, False if not found.
+        """
+        return item in self.entity or item in (value['tag'] for value in self.entity.get('attributes', []))
+
+
+    def _add_complex_fields(self, key: str, tag: str, values: list):
+        """
+        Add a complex field, either as an array or as a
+
+        """
+        if key not in self.entity:
+            self.entity[key] = [{} for _ in range(len(values))]
+            if key in self.complex_fields:
+                self.entity[key] = self.entity[key][0]
+        if key in self.complex_fields:
+            # For non-array fields, need to re-convert
+            self.entity[key][tag] = values[0]
+        else:
+            for i, value in enumerate(values):
+                self.entity[key][i][tag] = value
+
+    def _flatten_complex_fields(self, flattened_json, key, value):
+        for tag, field_value in value.items():
+            flattened_json[f"{key}{self.delimiter}{tag}"] = field_value
+        return flattened_json
+
+    def _flatten_complex_array_fields(self, flattened_json, key, value):
+        for array_element in value:
+            empty_dict = dict()
+            flattened_complex_field = self._flatten_complex_fields(empty_dict, key, array_element)
+            for tag, field_value in flattened_complex_field.items():
+                if not tag in flattened_json:
+                    flattened_json[tag] = field_value
+                else:
+                    flattened_json[tag] += f"{self.delimiter}{field_value}"
+        return flattened_json
+
+
+    def _flatten_attributes(self, flattened_json, value):
+        for attribute in value:
+            flattened_json[attribute['tag']] = attribute['value']
+        return flattened_json
+
+    def flatten(self) -> dict:
+        """
+        Flatten the :attr:`~EnaEntity.entity` property and return a non-nested dictionary. This will be mostly used for
+        output generation.
+
+        :return: flattened dictionary
+        """
+        sample_json = self.to_json()
+        flattened_json = {}
+        for key, value in sample_json.items():
+            if key in self.complex_fields:
+                flattened_json = self._flatten_complex_fields(flattened_json, key, value)
+            elif key in self.complex_fields_array:
+                flattened_json = self._flatten_complex_array_fields(flattened_json, key, value)
+            elif key == 'attributes':
+                flattened_json = self._flatten_attributes(flattened_json, value)
+            else:
+                flattened_json[key] = value
+        return flattened_json
+
+    @staticmethod
+    def guidelines() -> str:
+        """
+        Guidelines for filling out sample metadata for BioSamples.
+
+        :return: Printable string with guidelines.
+        """
+        return ENA_GUIDELINES
+
+ENA_GUIDELINES = ("A submission to ENA is composed of multiple elements:\n"
+                  "\t- EnaSubmission: An object containing the information about the data packet, such as the release "
+                  "date and what to do with the rest of the objects (Create new entries, modify existing, etc). This "
+                  "is the only necessary entity."
+                  "\n\t- EnaRun: An object that contains information about the data files."
+                  "\n\t- EnaExperiment: An object that contains information about multiple runs and the library preparation"
+                  "\n\t- EnaStudy: An object that contains information about the group of experiments"
+                  "\n\t- EnaProject: An object that contains information about a group of studies"
+                  "For more information, please see https://ena-docs.readthedocs.io/en/latest/submit/general-guide/metadata.html.")
+
+class EnaExperiment(EnaEntity):
+    submission_field_name = "experiments"
+    """
+    ENA experiment entity. This is a subclass to an `~biobroker.metadata_entity.metadata_entity.EnaEntity`;
+    it's a very simple subclass for the purpose of defining specific traits to the "Experiment" entities in ENA.
+    Everything else inherits from `~biobroker.metadata_entity.metadata_entity.EnaEntity`
+
+    :param metadata_content: Metadata content of the ENA experiment
+    :param data_model: Data model to validate the ENA experiment. Defaults to `~biobroker.generic.pydantic_model.EnaExperimentModel`
+    :param delimiter: optional parameter, used for key delimiters. Used mainly to manage complex fields.
+    :param verbose: True if logger should be set to INFO. Default WARNING.
+    """
+    def __init__(self, metadata_content: dict, data_model: type[BaseModel] = EnaExperimentModel, delimiter: str = "||",
+                 verbose: bool = False):
+        super().__init__(metadata_content, data_model=data_model, delimiter=delimiter, verbose=verbose)
+
+    @property
+    def complex_fields(self):
+        return ['libraryDescriptor', 'study']
+
+    @property
+    def complex_fields_array(self):
+        return ['samples']
+
+class EnaRun(EnaEntity):
+    submission_field_name = "runs"
+    """
+    ENA run entity. This is a subclass to an `~biobroker.metadata_entity.metadata_entity.EnaEntity`;
+    it's a very simple subclass for the purpose of defining specific traits to the "Experiment" entities in ENA.
+    Everything else inherits from `~biobroker.metadata_entity.metadata_entity.EnaEntity`
+
+    :param metadata_content: Metadata content of the ENA experiment
+    :param data_model: Data model to validate the ENA experiment. Defaults to `~biobroker.generic.pydantic_model.EnaExperimentModel`
+    :param delimiter: optional parameter, used for key delimiters. Used mainly to manage complex fields.
+    :param verbose: True if logger should be set to INFO. Default WARNING.
+    """
+
+    def __init__(self, metadata_content: dict, data_model: type[BaseModel] = EnaRunModel, delimiter: str = "||",
+                 verbose: bool = False, file_path_folder: str = ".", recursive_file_search: bool = True):
+        if 'filePath' in metadata_content:
+            file_path_folder = metadata_content['filePath']
+            del metadata_content['filePath']
+        super().__init__(metadata_content, data_model=data_model, delimiter=delimiter, verbose=verbose)
+        self.file_path_folder = file_path_folder
+        self.recursive_file_search = recursive_file_search
+        self.submitted_files = False
+        self.file_paths = self._check_files()
+
+    @property
+    def complex_fields(self):
+        """
+        List of complex fields. A complex field is just a nested dictionary. Overrides parent property.
+        """
+        return ['experiment']
+
+    @property
+    def complex_fields_array(self):
+        """
+        List of complex fields that are contained within arrays. A complex field is just a nested dictionary, but needs
+        special treatment when it is expected in the form of an array. Overrides parent property.
+        """
+        return ['samples', 'files']
+
+    def _check_files(self):
+        """
+        Check that the filenames provided correspond to existing files. If recursive_file_search is set to true in the
+        instance, this search happens recursively. This information is returned to be used for data upload.
+
+        :return: list of file paths
+        """
+        filenames = [f['fileName'] for f in self['files']]
+        if all([re.match("run/ERR\d{3}/ERR\d+/.+", filename) for filename in filenames]):
+            self.submitted_files = True
+            return [file.split('/')[-1] for file in filenames]
+        file_paths = [file_path for filename in filenames for file_path in
+                      glob(f"{self.file_path_folder}/**/{filename}", recursive=self.recursive_file_search)]
+        if len(file_paths) != len(filenames):
+            raise FileNumberDoesNotMatchError(self.logger, filenames, file_paths)
+        return file_paths
+
+
+class EnaStudy(EnaEntity):
+    submission_field_name = "studies"
+    """
+    ENA study entity. This is a subclass to an `~biobroker.metadata_entity.metadata_entity.EnaEntity`;
+    it's a very simple subclass for the purpose of defining specific traits to the "Study" entities in ENA.
+    Everything else inherits from `~biobroker.metadata_entity.metadata_entity.EnaEntity`
+
+    :param metadata_content: Metadata content of the ENA experiment
+    :param data_model: Data model to validate the ENA experiment. Defaults to `~biobroker.generic.pydantic_model.EnaExperimentModel`
+    :param delimiter: optional parameter, used for key delimiters. Used mainly to manage complex fields.
+    :param verbose: True if logger should be set to INFO. Default WARNING.
+    """
+    def __init__(self, metadata_content: dict, data_model: type[BaseModel] = EnaStudyModel, delimiter: str = "||",
+                 verbose: bool = False):
+        super().__init__(metadata_content, data_model=data_model, delimiter=delimiter, verbose=verbose)
+
+    @property
+    def complex_fields(self):
+        return []
+
+    @property
+    def complex_fields_array(self):
+        return []
+
+
+class EnaProject(EnaEntity):
+    submission_field_name = "projects"
+    """
+    ENA project entity. This is a subclass to an `~biobroker.metadata_entity.metadata_entity.EnaEntity`;
+    it's a very simple subclass for the purpose of defining specific traits to the "Project" entities in ENA.
+    Everything else inherits from `~biobroker.metadata_entity.metadata_entity.EnaEntity`
+
+    :param metadata_content: Metadata content of the ENA experiment
+    :param data_model: Data model to validate the ENA experiment. Defaults to `~biobroker.generic.pydantic_model.EnaExperimentModel`
+    :param delimiter: optional parameter, used for key delimiters. Used mainly to manage complex fields.
+    :param verbose: True if logger should be set to INFO. Default WARNING.
+    """
+    def __init__(self, metadata_content: dict, data_model: type[BaseModel] = EnaProjectModel, delimiter: str = "||",
+                 verbose: bool = False):
+        super().__init__(metadata_content, data_model=data_model, delimiter=delimiter, verbose=verbose)
+
+    @property
+    def complex_fields(self):
+        return []
+
+    @property
+    def complex_fields_array(self):
+        return []
+
+class EnaSubmission(EnaEntity):
+    submission_field_name = 'submission'
+    """
+    ENA submission entity. This is a subclass to an `~biobroker.metadata_entity.metadata_entity.EnaEntity`;
+    it's a very simple subclass for the purpose of defining specific traits to the "Submission" entities in ENA.
+    Everything else inherits from `~biobroker.metadata_entity.metadata_entity.EnaEntity`
+
+    :param metadata_content: Metadata content of the ENA experiment
+    :param data_model: Data model to validate the ENA experiment. Defaults to `~biobroker.generic.pydantic_model.EnaExperimentModel`
+    :param delimiter: optional parameter, used for key delimiters. Used mainly to manage complex fields.
+    :param verbose: True if logger should be set to INFO. Default WARNING.
+    """
+    def __init__(self, metadata_content: dict, data_model: type[BaseModel] = EnaSubmissionModel,
+                 delimiter: str = "||", verbose: bool = False):
+        super().__init__(metadata_content, data_model=data_model, delimiter=delimiter, verbose=verbose)
+
+    @property
+    def complex_fields(self):
+        return []
+
+    @property
+    def complex_fields_array(self):
+        return ["actions"]
