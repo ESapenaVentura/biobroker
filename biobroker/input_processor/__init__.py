@@ -15,17 +15,7 @@ into all the different entities.
 **Subclasses of GenericInputProcessor must define the following methods/properties**:
 
 - @input_data.setter
-
-**Aspects to improve**:
-
-- Currently, the :func:`~biobroker.input_processor.GenericInputProcessor.process`
-  function can fail at any point if any entity fails to validate. This could be handled in 2 ways:
-
-    - Catch all exceptions (meh) log them, and create the rest of the entities.
-    - `Current behaviour`: fail miserably and not return anything. I really like this option as, for me, an input
-      (spreadsheet, tsv file, etc) probably has meaning together and should remain this way. It could
-      be improved by logging all errors, then failing.
 """
 
-from .input_processor import GenericInputProcessor, TsvInputProcessor, XlsxInputProcessor
-__all__ = ['GenericInputProcessor', 'TsvInputProcessor', 'XlsxInputProcessor']
+from .input_processor import GenericInputProcessor, TsvInputProcessor, XlsxInputProcessor, ComplexXlsxInputProcessor
+__all__ = ['GenericInputProcessor', 'TsvInputProcessor', 'XlsxInputProcessor', 'ComplexXlsxInputProcessor']

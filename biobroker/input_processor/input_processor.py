@@ -6,6 +6,8 @@ from numpy import nan
 
 from biobroker.generic.exceptions import MandatoryFunctionNotSet
 from biobroker.generic.logger import set_up_logger
+from biobroker.input_processor.exceptions import (CantProcessBothEntityTypes, CantProcessNoEntityTypes,
+                                                  InputDataIsComplexError, TooManyEntitiesSpecifiedError)
 from biobroker.metadata_entity import GenericEntity
 
 """
@@ -25,7 +27,7 @@ class GenericInputProcessor:
         self.input_data = input_data_path
 
     @property
-    def input_data(self) -> list[dict]:
+    def input_data(self) -> list[dict] | dict[str, list[dict]]:
         """
         Input data in JSON format. Set from input_path by setter
 
@@ -34,7 +36,7 @@ class GenericInputProcessor:
         return self._input_data
 
     @input_data.setter
-    def input_data(self, path: str) -> list[dict]:
+    def input_data(self, path: str) -> list[dict] | dict[str, list[dict]]:
         """
         SUBCLASSES MUST OVERRIDE THIS PROPERTY.
 
@@ -42,7 +44,24 @@ class GenericInputProcessor:
         """
         raise MandatoryFunctionNotSet(self.logger)
 
-    def process(self, entity: Type[GenericEntity]) -> list[GenericEntity]:
+    def _check_entity_length_matches_input_data(self, entities_map: dict[str, Type[GenericEntity]]):
+        """
+        Check if the length of the entity dictionary matches the length of the input data. There are three main outcomes:
+        - Length is equal (0): Continue processing
+        - Length is lesser (-1): This means that there are more entities specified than there are to process. Raise error.
+        - Length is greater (1): This means that there are more types of input data than specified entities. Warn user.
+
+        :param entities_map: Entity map provided to `~biobroker.input_processor.GenericInputProcessor.process`.
+        """
+        match (len(entities_map) > len(self.input_data)) - (len(entities_map) < len(self.input_data)):
+            case 1:
+                raise TooManyEntitiesSpecifiedError(self.logger, list(entities_map.keys()))
+            case -1:
+                self.logger.warning(f"There are more entities in the input data than specified in the entities_map. "
+                                    f"These entities won't be processed: "
+                                    f"{','.join(set(self.input_data.keys()) - set(entities_map.keys()))}")
+
+    def process(self, entity: Type[GenericEntity] = None, entities_map: dict[str, Type[GenericEntity]] = None) -> list[Type[GenericEntity]]:
         """
         Process self.input_data and return a list of metadata entities that depend on the 'GenericEntity' subclass
         passed to the function.
@@ -51,12 +70,34 @@ class GenericInputProcessor:
         behaviours.
 
         :param entity: GenericEntity subclass (Not instance) to process the input data into.
-        :return: list of entities. Must be subclass of GenericEntity
+        :param entities_map: Dictionary of {name_of_sheet: GenericEntity subclass} to return a complex list.
+        :return: list of entities. Must be a subclass of GenericEntity
         """
+        if entity and entities_map:
+            raise CantProcessBothEntityTypes(self.logger)
+        if not entity and not entities_map:
+            raise CantProcessNoEntityTypes(self.logger)
         entities = []
-        for json_entity in self.input_data:
-            new_entity = entity(metadata_content=deepcopy(json_entity))
-            entities.append(new_entity)
+        if entity:
+            entities_map = {"": entity}
+            if isinstance(self.input_data, dict):
+                raise InputDataIsComplexError(self.logger, list(self.input_data.keys()))
+        else:
+            self._check_entity_length_matches_input_data(entities_map)
+        entity_creation_errors = False
+        for key, entity in entities_map.items():
+            input_data = self.input_data if not key else self.input_data[key]
+            for json_entity in input_data:
+                try:
+                    new_entity = entity(metadata_content=deepcopy(json_entity))
+                except:
+                    entity_creation_errors = True
+                    continue
+                entities.append(new_entity)
+        if entity_creation_errors:
+            self.logger.error("There were errors processing the entities. Please check the logs for more information."
+                              "No entities will be returned until all the input data is correct.")
+            return []
         return entities
 
     def transform(self, field_mapping: dict, delete_non_mapped_fields: bool = False):
@@ -121,6 +162,29 @@ class XlsxInputProcessor(GenericInputProcessor):
 
         :param path: Path to the file with the input metadata.
         """
-        file = read_excel(path, engine='openpyxl', sheet_name=self.sheet_name).fillna(nan).replace([nan], [None])
+        with open(path, 'rb') as f:
+            file = read_excel(f, engine='openpyxl', sheet_name=self.sheet_name).fillna(nan).replace([nan], [None])
         json_file = file.to_dict(orient='records')
+        self._input_data = json_file
+
+class ComplexXlsxInputProcessor(GenericInputProcessor):
+    """
+    XLSX complex input processor. Loads a XLSX file with entity metadata split across several tabs.
+
+    :param input_data: Path to the file with the input metadata.
+    :param worksheet_name: Names of the worksheets to be processed.
+    """
+    def __init__(self, input_data: str, sheet_names: list[str] | None =None):
+        if sheet_names is None:
+            sheet_names = ["Sheet1"]
+        self.sheet_names = sheet_names
+        super().__init__(input_data)
+
+    @GenericInputProcessor.input_data.setter
+    def input_data(self, path):
+        json_file = {}
+        for sheet_name in self.sheet_names:
+            with open(path, 'rb') as f:
+                tab = read_excel(f, engine='openpyxl', sheet_name=sheet_name).fillna(nan).replace([nan], [None])
+            json_file[sheet_name] = tab.to_dict(orient='records')
         self._input_data = json_file
