@@ -17,6 +17,8 @@ progressbar2==4.4.2
 unit_parse
 urllib3
 pydantic~=2.9.2
+rich==13.9.4
 
 behave
 mock
+

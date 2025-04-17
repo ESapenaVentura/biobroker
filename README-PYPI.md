@@ -28,3 +28,15 @@ For usage, please see the examples/ folder in the [repository](https://github.co
 
 For extensive documentation about the overall infrastructure and each class, please see the
 [ReadTheDocs page](https://biobroker.readthedocs.io/en/latest/)
+
+## Supported archives
+
+- BioSamples (BSD)
+  - Full sample submission (Including metadata tags such as OntologyValues)
+  - Full sample update
+  - Structured data submission
+
+- European Nucleotide Archive (ENA)
+  - Full submission of genomic data (Reads)
+  - Full update
+  - Parallel sample submission to BSD with automatic linking
